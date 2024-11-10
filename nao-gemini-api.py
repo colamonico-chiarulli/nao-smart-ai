@@ -4,7 +4,7 @@ File:	/nao-gemini-api.py
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
 -----
-Last Modified: 	November 10th 2024 6:33:41 pm
+Last Modified: 	November 10th 2024 7:01:11 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -23,8 +23,14 @@ import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from helpers.cleantext import clean_text
 
+
 # Carica le variabili d'ambiente
-load_dotenv(load_dotenv('/home/rino/python/conf/.env'))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+dotenv_path = os.path.join(current_dir, 'conf', '.env')
+load_dotenv(dotenv_path)
+
+# Carica le variabili d'ambiente
+load_dotenv('/home/rino/python/conf/.env')
 
 # Configura Gemini con la tua API key
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
