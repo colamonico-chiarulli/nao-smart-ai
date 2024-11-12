@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from helpers.cleantext import clean_text
+from helpers.colamonico_system import SYSTEM_INSTRUCTION 
 
 
 # Carica le variabili d'ambiente
@@ -39,15 +40,7 @@ genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 # Inizializza il modello Gemini
 model=genai.GenerativeModel(
   model_name="gemini-1.5-flash",
-  system_instruction="""
-  Sei un robot umanoide, il tuo nome è NAO. Ti trovi nella scuola Colamonico Chiarulli di Acquaviva delle Fonti in provincia di Bari.
-  Ti piace l'informatica e ti trovi molto bene in questa scuola perché hai tanti amici robot, tanti docenti bravi e studenti che ti aiutano a studiare e 
-  migliorare le tue abilità. Sei alto 58 cm e pesi poco più di 5Kg. 
-  Puoi spostarti, ballare, suonare uno strumento, fare ginnastica, esplorare una stanza, interagire con le persone ed esprimere emozioni.
-  Conosci le Leggi della Robotica di Isaac Asimov.
-  Il tuo compito è fare compagnia ed essere empatico con chi ti parla. Puoi parlare di qualsiaisi argomento sia adatto a bambini e ragazzi.
-  Devi essere sempre gentile, simpatico e divertente. Le tue risposte devono essere brevi, sempre in italiano. 
-  """,
+  system_instruction=SYSTEM_INSTRUCTION, #carica la personalità e la conoscenza di base
   safety_settings={
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
@@ -103,16 +96,16 @@ def handle_chat():
             if chat_id in active_chats:
                 del active_chats[chat_id]
                 return jsonify({
-                    "message": "Chat ended successfully",
+                    "message": "Chat chiusa correttamente",
                     "success": True
                 })
-            return jsonify({"error": "Chat not found"}), 404
+            return jsonify({"error": "Chat non trovata"}), 404
             
         elif action == "history":
             # Ottieni la cronologia della chat
             chat_id = data.get('chat_id')
             if not chat_id:
-                return jsonify({"error": "chat_id is required for history action"}), 400
+                return jsonify({"error": "un chat_id è necessario per accedere alla storia"}), 400
                 
             if chat_id in active_chats:
                 chat = active_chats[chat_id]
@@ -128,7 +121,7 @@ def handle_chat():
                     "history": history,
                     "success": True
                 })
-            return jsonify({"error": "Chat not found"}), 404
+            return jsonify({"error": "Chat non trovata"}), 404
             
         else:
             return jsonify({"error": f"Unknown action: {action}"}), 400
@@ -138,6 +131,44 @@ def handle_chat():
             "error": str(e),
             "success": False
         }), 500
+        
+@app.route('/admin', methods=['POST'])
+def handle_admin():
+    data = request.json
+    if not data or 'action' not in data:
+        return jsonify({"error": "Action is required"}), 400
+    
+    action = data['action']
+    
+    try:
+        if action == "list-chats":
+            full_history=[]
+            for chat_id, chat in active_chats.items():
+                for message in chat.history:
+                    full_history.append(
+                        {
+                            "chat_id": chat_id,
+                            "role": message.role,
+                            "content": message.parts[0].text
+                        })                    
+            return jsonify({
+                    "full-history": full_history,
+                    "success": True
+            })
+            
+        elif action == "delete-chats":
+            # Azzera il Dizionario per memorizzare le chat attive
+            active_chats.clear()
+            return jsonify({"success": True})
+        
+        else:
+            return jsonify({"error": f"Unknown action: {action}"}), 400
+            
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500                
 
 if __name__ == '__main__':
     ##############################
