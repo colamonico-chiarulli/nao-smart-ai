@@ -5,17 +5,15 @@ cleantext
 Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.
 '''
 import re
+from unidecode import unidecode
 
+"""
+"    Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.    
+"    Args:  text (str): Testo da pulire
+"    Returns:      str: Testo pulito e ottimizzato
+"""
 def clean_text(text):
-    """
-    Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.
-    
-    Args:
-        text (str): Testo da pulire
-        
-    Returns:
-        str: Testo pulito e ottimizzato
-    """
+
     # Rimuove emoji e caratteri speciali
     # Questo pattern copre la maggior parte degli emoji Unicode e altri simboli speciali
     text = re.sub(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F700-\U0001F77F\U0001F780-\U0001F7FF\U0001F800-\U0001F8FF\U0001F900-\U0001F9FF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF\U00002702-\U000027B0\U000024C2-\U0001F251]+', '', text)
@@ -40,7 +38,8 @@ def clean_text(text):
     # Rimuove spazi extra
     text = text.strip()
     
-    return text
+    #Converte in ascii e restiuisce
+    return unidecode(text)
 
 
 # test di utilizzo
