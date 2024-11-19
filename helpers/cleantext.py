@@ -1,9 +1,18 @@
 '''
-Rino Andriano
-cleantext 
+File:	/helpers/cleantex.py
+@author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
+@copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
+Created Date: Saturday, November 9th 2024, 6:37:29 pm
+-----
+Last Modified: 	November 19th 2024 7:01:11 pm
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
+-----
+@license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
+------------------------------------------------------------------------------
 
 Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.
 '''
+
 import re
 from unidecode import unidecode
 
@@ -31,6 +40,7 @@ def clean_text(text):
     text = re.sub(r'(-+)', '-', text)   # Normalizza trattini multipli
     text = re.sub(r'(\*+)', '', text)   # Rimuove gli asterischi
     text = re.sub(r'[\[\]\(\)\{\}]', '', text)   # Rimuove le parentesi
+    text = re.sub(r'[/\\]', '', text)   # Rimuove slash e backslash
     
     # Rimuove spazi prima della punteggiatura
     text = re.sub(r'\s+([.,!?;:])', r'\1', text)
