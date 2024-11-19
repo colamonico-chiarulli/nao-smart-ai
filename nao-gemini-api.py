@@ -4,18 +4,20 @@ File:	/nao-gemini-api.py
 @copyright	(c)2024 Rino Andriano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
 -----
-Last Modified: 	November 10th 2024 7:01:11 pm
+Last Modified: 	November 19th 2024 7:01:11 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 ------------------------------------------------------------------------------
-REST API - per una caht con NAO Robbot e Gemini
+REST API - per una caht con NAO Robot e Gemini
 Usa un singolo endpoint /api/chat con metodo POST per tutte le operazioni. 
 Le diverse azioni sono specificate nel campo action del JSON inviato.
 le azioni sono: start, end, hystory
 '''
 
 import os
+import logging
+from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -24,29 +26,25 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from helpers.cleantext import clean_text
 from helpers.colamonico_system import SYSTEM_INSTRUCTION 
 
-
 # Carica le variabili d'ambiente
 current_dir = os.path.dirname(os.path.abspath(__file__))
 dotenv_path = os.path.join(current_dir, 'conf', '.env')
 load_dotenv(dotenv_path)
-
-# Carica le variabili d'ambiente
 load_dotenv('/home/rino/python/conf/.env')
 
 # Configura Gemini con la tua API key
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 
-
 # Inizializza il modello Gemini
-model=genai.GenerativeModel(
-  model_name="gemini-1.5-flash",
-  system_instruction=SYSTEM_INSTRUCTION, #carica la personalità e la conoscenza di base
-  safety_settings={
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=SYSTEM_INSTRUCTION,
+    safety_settings={
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT:HarmBlockThreshold.BLOCK_ONLY_HIGH,
-        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT:HarmBlockThreshold.BLOCK_ONLY_HIGH
-  }
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH
+    }
 )
 
 app = Flask(__name__)
@@ -55,11 +53,41 @@ CORS(app)  # Abilita CORS per tutte le routes
 # Dizionario per memorizzare le chat attive
 active_chats = {}
 
+# Configurazione logging
+def setup_logging():
+    # Verica che la cartella logs esista
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Crea un file con la data di avvio del servizio
+    timestamp = datetime.now().strftime("%Y%m%d")
+    log_file = os.path.join(log_dir, f'chat_log_{timestamp}.txt')
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+        ]
+    )
+    return logging.getLogger(__name__)
+
+# Configura il servizio di LOG e crea la variabile globale
+logger = setup_logging()
+
+# Scrive una riga per i messaggi nel file di LOG
+def log_chat_message(chat_id, role, content):
+    #Log a chat message to file
+    content_str = str(content)[:2000]  # Limita la stringa a 2000 caratteri
+    log_entry = f"CHAT_ID: {chat_id} | ROLE: {role} | MSG: {content_str}"
+    logger.info(log_entry)
+
 @app.route('/chat', methods=['POST'])
 def handle_chat():
     data = request.json
     if not data or 'action' not in data:
-        return jsonify({"error": "Action is required"}), 400
+        return jsonify({"error": "È richiesta un'azione"}), 400
     
     action = data['action']
     
@@ -70,7 +98,7 @@ def handle_chat():
             message = data.get('message')
             
             if not message:
-                return jsonify({"error": "Message is required for start action"}), 400
+                return jsonify({"error": "Un messaggio è necessario per avviare la chat"}), 400
             
             if chat_id and chat_id in active_chats:
                 chat = active_chats[chat_id]
@@ -79,11 +107,18 @@ def handle_chat():
                 chat_id = str(id(chat))
                 active_chats[chat_id] = chat
             
+            # Log incoming message
+            log_chat_message(chat_id, "user", message)
+            
             response = chat.send_message(message)
+            
+            # Log response message
+            cleaned_response = clean_text(response.text)
+            log_chat_message(chat_id, "model", cleaned_response)
             
             return jsonify({
                 "chat_id": chat_id,
-                "response": clean_text(response.text), #ripulisce il testo,
+                "response": cleaned_response,
                 "success": True
             })
             
@@ -91,9 +126,11 @@ def handle_chat():
             # Termina una chat
             chat_id = data.get('chat_id')
             if not chat_id:
-                return jsonify({"error": "chat_id is required for end action"}), 400
+                return jsonify({"error": "chat_id è necessaria per terminare una chat"}), 400
                 
             if chat_id in active_chats:
+                # Log chat closure
+                logger.info(f"CHAT_CLOSED: {chat_id}")
                 del active_chats[chat_id]
                 return jsonify({
                     "message": "Chat chiusa correttamente",
@@ -124,9 +161,10 @@ def handle_chat():
             return jsonify({"error": "Chat non trovata"}), 404
             
         else:
-            return jsonify({"error": f"Unknown action: {action}"}), 400
+            return jsonify({"error": f"Azione sconosciuta: {action}"}), 400
             
     except Exception as e:
+        logger.error(f"Errore nlla gestione della chat: {str(e)}")
         return jsonify({
             "error": str(e),
             "success": False
@@ -136,13 +174,13 @@ def handle_chat():
 def handle_admin():
     data = request.json
     if not data or 'action' not in data:
-        return jsonify({"error": "Action is required"}), 400
+        return jsonify({"error": "È richiesta un'azione"}), 400
     
     action = data['action']
     
     try:
         if action == "list-chats":
-            full_history=[]
+            full_history = []
             for chat_id, chat in active_chats.items():
                 for message in chat.history:
                     full_history.append(
@@ -157,14 +195,17 @@ def handle_admin():
             })
             
         elif action == "delete-chats":
+            # Log chat deletion
+            logger.info("DELETING ALL ACTIVE CHATS")
             # Azzera il Dizionario per memorizzare le chat attive
             active_chats.clear()
             return jsonify({"success": True})
         
         else:
-            return jsonify({"error": f"Unknown action: {action}"}), 400
+            return jsonify({"error": f"Azione sconosciuta: {action}"}), 400
             
     except Exception as e:
+        logger.error(f"Error in admin handling: {str(e)}")
         return jsonify({
             "error": str(e),
             "success": False
