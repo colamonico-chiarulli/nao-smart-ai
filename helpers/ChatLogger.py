@@ -2,7 +2,7 @@
 File:	/helpers/ChatLogger.py
 @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
-Created Date: Saturday, November 9th 2024, 6:37:29 pm
+Created Date: Wednesday, November 19th 2024, 6:37:29 pm
 -----
 Last Modified: 	November 19th 2024 7:01:11 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
@@ -63,7 +63,7 @@ class ChatLogger:
 
     def log_info(self, info_message):
         """ Registra un messaggio di informazione """
-        self.logger.error(info_message)
+        self.logger.info(info_message)
     
     def log_error(self, error_message):
         """ Registra un messaggio di errore """
