@@ -16,8 +16,6 @@ le azioni sono: start, end, hystory
 '''
 
 import os
-import logging
-from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -25,6 +23,7 @@ import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from helpers.cleantext import clean_text
 from helpers.colamonico_system import SYSTEM_INSTRUCTION 
+from helpers.ChatLogger import ChatLogger
 
 # Carica le variabili d'ambiente
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -53,35 +52,9 @@ CORS(app)  # Abilita CORS per tutte le routes
 # Dizionario per memorizzare le chat attive
 active_chats = {}
 
-# Configurazione logging
-def setup_logging():
-    # Verica che la cartella logs esista
-    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
-    os.makedirs(log_dir, exist_ok=True)
-    
-    # Crea un file con la data di avvio del servizio
-    timestamp = datetime.now().strftime("%Y%m%d")
-    log_file = os.path.join(log_dir, f'chat_log_{timestamp}.txt')
-    
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-        ]
-    )
-    return logging.getLogger(__name__)
 
-# Configura il servizio di LOG e crea la variabile globale
-logger = setup_logging()
-
-# Scrive una riga per i messaggi nel file di LOG
-def log_chat_message(chat_id, role, content):
-    #Log a chat message to file
-    content_str = str(content)[:2000]  # Limita la stringa a 2000 caratteri
-    log_entry = f"CHAT_ID: {chat_id} | ROLE: {role} | MSG: {content_str}"
-    logger.info(log_entry)
+# Crea un'istanza del logger ed imposto la cartella ./logs
+logger = ChatLogger('logs')
 
 @app.route('/chat', methods=['POST'])
 def handle_chat():
@@ -108,13 +81,13 @@ def handle_chat():
                 active_chats[chat_id] = chat
             
             # Log incoming message
-            log_chat_message(chat_id, "user", message)
+            logger.log_chat_message(chat_id, "user", message)
             
             response = chat.send_message(message)
             
             # Log response message
             cleaned_response = clean_text(response.text)
-            log_chat_message(chat_id, "model", cleaned_response)
+            logger.log_chat_message(chat_id, "model", cleaned_response)
             
             return jsonify({
                 "chat_id": chat_id,
@@ -130,7 +103,7 @@ def handle_chat():
                 
             if chat_id in active_chats:
                 # Log chat closure
-                logger.info(f"CHAT_CLOSED: {chat_id}")
+                logger.log_info(f"CHAT_CLOSED: {chat_id}")
                 del active_chats[chat_id]
                 return jsonify({
                     "message": "Chat chiusa correttamente",
@@ -164,7 +137,7 @@ def handle_chat():
             return jsonify({"error": f"Azione sconosciuta: {action}"}), 400
             
     except Exception as e:
-        logger.error(f"Errore nlla gestione della chat: {str(e)}")
+        logger.log_error(f"Errore nlla gestione della chat: {str(e)}")
         return jsonify({
             "error": str(e),
             "success": False
@@ -196,7 +169,7 @@ def handle_admin():
             
         elif action == "delete-chats":
             # Log chat deletion
-            logger.info("DELETING ALL ACTIVE CHATS")
+            logger.log_info("DELETING ALL ACTIVE CHATS")
             # Azzera il Dizionario per memorizzare le chat attive
             active_chats.clear()
             return jsonify({"success": True})
@@ -205,7 +178,7 @@ def handle_admin():
             return jsonify({"error": f"Azione sconosciuta: {action}"}), 400
             
     except Exception as e:
-        logger.error(f"Error in admin handling: {str(e)}")
+        logger.log_error(f"Error in admin handling: {str(e)}")
         return jsonify({
             "error": str(e),
             "success": False
