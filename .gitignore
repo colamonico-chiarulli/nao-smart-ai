@@ -1,0 +1,5 @@
+.env
+__pycache__/
+nao-gemini-api/logs/chat*.txt
+*.pyc
+*.pyo
