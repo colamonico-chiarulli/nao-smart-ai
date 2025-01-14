@@ -28,14 +28,19 @@ Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 """
 
 import requests
-# import json
-# import sys
+import json
+import os
+from dotenv import load_dotenv
 
 
 class ChatTester:
     def __init__(self):
-        YOUR_URL= "https://YOUR_SERVER_URL:PORT/chat"
-        self.API_URL = YOUR_URL
+        # Imposta l'URL del servizio web API dal file .env
+        # Assicurati che il file .env sia nella cartella web_api     
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        dotenv_path = os.path.join(current_dir, "..", "web_api", ".env")
+        load_dotenv(dotenv_path)
+        self.API_URL = os.getenv("WEB_API_URL")
         self.chat_id = None
 
     def send_message(self, message):
@@ -111,7 +116,7 @@ def main():
             # Invia messaggio e mostra risposta
             if user_input:
                 response = chat.send_message(user_input)
-                print(f"\nBot > {response}")
+                print("\nBot > " + json.dumps(response, indent=2))
 
     except KeyboardInterrupt:
         print("\n\nInterruzione da tastiera. Chiusura in corso...")
