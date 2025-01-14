@@ -184,3 +184,126 @@ IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING WILL ANY C
 If the disclaimer of warranty and limitation of liability provided above cannot be given local legal effect according to their terms, reviewing courts shall apply local law that most closely approximates an absolute waiver of all civil liability in connection with the Program, unless a warranty or assumption of liability accompanies a copy of the Program in return for a fee.
 
 END OF TERMS AND CONDITIONS
+
+## Additional Terms under AGPLv3 Section 7
+
+In accordance with Section 7 of the GNU Affero General Public License v3,
+the following additional terms apply to this software:
+
+### 1. REQUIRED ATTRIBUTION (Section 7(b)(c)(d))
+
+Any interactive user interface must preserve and display the original 
+author attribution when the AI is asked about its creators, origin, 
+or development team.
+
+The robot NAO Smart AI must always identify itself as:
+"Developed by Prof. Rino Andriano and Prof. Vito Trifone Gargano 
+at IISS Colamonico-Chiarulli, Acquaviva delle Fonti (BA), Italy"
+
+Any deployment in educational or healthcare settings must prominently 
+display:
+
+> Powered by NAO Smart AI
+> Open Source project by Prof. Rino Andriano & Prof. Vito Trifone Gargano
+> IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA), Italy
+
+
+
+#### Public deployments and demonstrations:
+
+When demonstrating the robot at public events, conferences, or in 
+published materials (videos, articles, case studies), credit must 
+be given to the original authors.
+
+
+### 2. UNMODIFIABLE SYSTEM PROMPTS (Section 7(b))
+
+System prompts containing Author attribution information cannot be modified
+or removed without explicit written permission from the copyright holders.
+
+### 3. TRADEMARK PROTECTION (Section 7(e))
+
+"NAO Smart AI" is a trademark associated with the original authors.
+
+Use of this name for commercial purposes requires written authorization.
+
+Modified distributions (forks) must use a different name 
+(e.g., "Fork of NAO Smart AI", "Based on NAO Smart AI") and clearly 
+indicate modifications.
+
+### 4. INDEMNIFICATION (Section 7(f))
+
+Any person or entity that modifies, deploys, or distributes this 
+software agrees to indemnify, defend, and hold harmless the authors 
+(Rino Andriano, Vito Trifone Gargano) and IISS "C. Colamonico - N. 
+Chiarulli" from all claims, damages, losses, liabilities, and expenses 
+(including legal fees) arising from:
+
+a) Modifications to the software affecting robot safety or AI behavior
+
+b) Deployment with vulnerable populations (minors, patients with 
+   cognitive impairments, elderly with dementia)
+
+c) Integration with third-party AI services or modifications to 
+   AI prompts generating inappropriate content
+
+d) Physical robot operations and safety incidents
+
+e) Violations of applicable healthcare, education, data protection 
+   (GDPR), or robotics safety laws
+
+This indemnification supplements, but does not replace, the warranty 
+disclaimers in AGPLv3 sections 15-16.
+
+### 5. SAFETY AND ETHICAL USE REQUIREMENTS (Section 7(b)(c))
+
+Users deploying this software with NAO robots MUST comply with:
+
+a) **Supervision**: Adult supervision is MANDATORY when interacting 
+   with minors, cognitively impaired individuals, or vulnerable users
+
+b) **Risk Assessment**: Conduct risk assessment before deployment in 
+   healthcare or educational settings, considering:
+   - Physical safety (robot movements in proximity to users)
+   - Psychological safety (content appropriateness)
+   - Data protection (GDPR compliance for conversation logs)
+
+c) **Content Filtering**: Implement content filtering and moderation 
+   appropriate for the target population (children, patients, elderly)
+
+d) **Regulatory Compliance**: Comply with applicable regulations for:
+   - Medical devices (if used in clinical settings)
+   - Educational technology (privacy, child protection)
+   - Assistive technologies (accessibility standards)
+   - Robotics safety (ISO standards if applicable)
+
+e) **Data Protection**: Maintain conversation logs in compliance with 
+   GDPR and local privacy laws, including:
+   - Informed consent from users (or legal guardians for minors)
+   - Right to access, rectification, erasure
+   - Data minimization and purpose limitation
+   - Secure storage and encryption
+
+f) **Incident Reporting**: Report any serious incidents (injuries, 
+   inappropriate content, privacy breaches) to local authorities 
+   and the software authors
+
+Failure to comply with these requirements does not void the license, 
+but increases indemnification obligations under term 4 above.
+
+### 6. CONTRIBUTION LICENSE AGREEMENT
+
+Contributors submitting code (pull requests, patches, extensions) 
+automatically agree to:
+
+a) Release their contributions under AGPLv3
+
+b) Accept these Additional Terms (Section 7)
+
+c) Grant a perpetual, worldwide, royalty-free license to the project
+maintainers to use, modify, and distribute their contributions
+
+d) Warrant that their contributions are original or properly licensed
+
+Contributors retain copyright on their specific contributions and 
+will be acknowledged in the AUTHORS or CONTRIBUTORS file.
