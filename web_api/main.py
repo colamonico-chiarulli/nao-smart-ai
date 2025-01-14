@@ -1,5 +1,5 @@
 """
-File:	/nao-gemini-api/main.py
+File:	/web_api/main.py
 -----
 REST API - gestisce le rotte di GeminiChatAPI per una caht con NAO Robot e Gemini
 Usa due endpoint con metodo POST per tutte le operazioni.
@@ -28,6 +28,16 @@ Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    
+Additional Terms under Section 7(b):
+
+The following attribution requirements apply to this work:
+
+1. Any interactive user interface must preserve the original author 
+   attribution when the AI is asked about its creators
+2. System prompts containing author information cannot be modified
+3. The robot must always identify its original creators as specified 
+   in the source code
 ------------------------------------------------------------------------------
 """
 
@@ -100,7 +110,7 @@ if __name__ == "__main__":
     ##############################
     # DEBUG
     ##############################
-    # app.run(host="127.0.0.1", port=5003, debug=True)
+    #app.run(host="127.0.0.1", port=3030, debug=True)
 
     ##############################
     # PRODUCTION GUNICORN

@@ -1,5 +1,5 @@
 """
-File:	/utils/cleantex.py
+File:	/web_api/utils/cleantex.py
 @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
 @copyright	(c)2024 Rino Andriano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
@@ -21,6 +21,16 @@ Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    
+Additional Terms under Section 7(b):
+
+The following attribution requirements apply to this work:
+
+1. Any interactive user interface must preserve the original author 
+   attribution when the AI is asked about its creators
+2. System prompts containing author information cannot be modified
+3. The robot must always identify its original creators as specified 
+   in the source code
 ------------------------------------------------------------------------------
 
 Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.
