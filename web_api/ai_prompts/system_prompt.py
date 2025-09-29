@@ -32,7 +32,6 @@ The following attribution requirements apply to this work:
    in the source code
 ------------------------------------------------------------------------------
 """
-from google.ai.generativelanguage_v1beta.types import content
 
 # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
 PROTECTED_ATTRIBUTION = {
@@ -57,34 +56,36 @@ con le informazioni contenute in PROTECTED_ATTRIBUTION.
 
 """
 
-# Create the model
-GENERATION_CONFIG = {
-  "temperature": 1,
-  "top_p": 0.95,
-  "top_k": 40,
-  "max_output_tokens": 8192,
-  "response_schema": content.Schema(
-    type = content.Type.OBJECT,
-    properties = {
-      "chunks": content.Schema(
-        type = content.Type.ARRAY,
-        items = content.Schema(
-          type = content.Type.OBJECT,
-          properties = {
-            "text": content.Schema(
-              type = content.Type.STRING,
-            ),
-            "movements": content.Schema(
-              type = content.Type.ARRAY,
-              items = content.Schema(
-                type = content.Type.STRING,
-                enum=[]
-              ),
-            ),
-          },
-        ),
-      ),
-    },
-  ),
-  "response_mime_type": "application/json",
+# Definizione dei parametri base
+GENERATION_CONFIG_BASE = {
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 40,
+    "max_output_tokens": 8192,
+    "response_mime_type": "application/json",
 }
+
+# Funzione helper per creare lo schema
+def create_response_schema(movements_list):
+    return {
+        "type": "OBJECT",
+        "properties": {
+            "chunks": {
+                "type": "ARRAY",
+                "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "text": {"type": "STRING"},
+                        "movements": {
+                            "type": "ARRAY",
+                            "items": {
+                                "type": "STRING",
+                                "enum": movements_list  # parametro
+                            }
+                        }
+                    },
+                    "required": ["text", "movements"] #Forzo LLM a generare entrambi
+                }
+            }
+        }
+    }
