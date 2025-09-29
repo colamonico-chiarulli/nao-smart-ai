@@ -3,4 +3,4 @@ Flask_Cors
 protobuf
 python-dotenv
 Unidecode
-google.generativeai
+google-genai
