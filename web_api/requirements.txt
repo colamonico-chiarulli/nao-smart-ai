@@ -1,6 +1,8 @@
 Flask
 Flask_Cors
+helpers
 protobuf
 python-dotenv
 Unidecode
-google.generativeai
+google-genai
+gunicorn
