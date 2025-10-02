@@ -73,6 +73,7 @@ def clean_text(text):
     text = re.sub(r"(\*+)", "", text)  # Rimuove gli asterischi
     text = re.sub(r"[\[\]\(\)\{\}]", "", text)  # Rimuove le parentesi
     text = re.sub(r"[/\\]", "", text)  # Rimuove slash e backslash
+    text = re.sub(r'"', '', text)      # Rimuove le doppie virgolette
 
     # Rimuove spazi prima della punteggiatura
     text = re.sub(r"\s+([.,!?;:])", r"\1", text)
