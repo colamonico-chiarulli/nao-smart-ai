@@ -10,7 +10,7 @@ Le diverse azioni sono specificate nel campo action del JSON inviato.
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	January 16th 2025 6:01:11 pm
+Last Modified: 	October 02nd 2025 07:01:00 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -53,6 +53,7 @@ from google import genai
 from google.genai import types
 
 from utils.cleantext import clean_text
+from utils.cleantext import clean_markdown
 from ai_prompts.system_prompt import SYSTEM_PROMPT_BASE
 from ai_prompts.system_prompt import create_response_schema
 from ai_prompts.system_prompt import GENERATION_CONFIG_BASE
@@ -62,8 +63,6 @@ from flask import jsonify
 
 #Personalità di default in caso di errori
 ERROR_PERSONALITY = "Sei un robot sociale amichevole"
-#Modello AI 
-GEMINI_MODEL = "gemini-2.0-flash"
 
 class GeminiChatAPI:
     """
@@ -114,6 +113,8 @@ class GeminiChatAPI:
         # Dizionario per memorizzare le chat attive
         self.active_chats = {}
         
+        #Carica il modello LLM da .ENV - se non esiste carica il default
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
     
     def _get_movements_from_file(self):
@@ -238,16 +239,7 @@ class GeminiChatAPI:
 
         try:
             # Rimuove eventuali blocchi di codice Markdown dal JSON generato da LLM
-            cleaned_json_string = response_text.strip()
-            if cleaned_json_string.startswith("```json"):
-                cleaned_json_string = cleaned_json_string[7:]
-            elif cleaned_json_string.startswith("```"):
-                cleaned_json_string = cleaned_json_string[3:]
-            if cleaned_json_string.endswith("```"):
-                cleaned_json_string = cleaned_json_string[:-3]
-            cleaned_json_string = cleaned_json_string.strip()
-            
-
+            cleaned_json_string=clean_markdown(response_text)
             # Esegui il parsing del JSON sulla stringa pulita
             response_data = json.loads(cleaned_json_string)
             #self.logger.log_info(f"Debug JSON: {response_data}")
@@ -319,7 +311,7 @@ class GeminiChatAPI:
 
             # Invia il messaggio usando la configurazione centralizzata
             response = self.client.models.generate_content(
-                model=GEMINI_MODEL,
+                model=self.gemini_model,
                 contents=chat_history,
                 config=self.generation_config
             )
