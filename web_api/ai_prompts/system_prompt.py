@@ -5,6 +5,9 @@ File:	web_api/ai_prompts/system_prompt.py
 @copyright	(c)2025 Rino Andriano
 Created Date: January 16th 2025 6:01:11 pm
 -----
+Last Modified: 	October 02nd 2025 06:45:00 pm
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
+-----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
     This program is free software: you can redistribute it and/or modify
