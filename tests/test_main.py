@@ -7,7 +7,7 @@ Test API NAO gemini
 @copyright	(c)2024 Rino Andriano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
 -----
-Last Modified: 	November20th 2024 8:01:11 pm
+Last Modified: 	October 6th 2025 4:50:00 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -29,6 +29,7 @@ Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 
 import requests
 import json
+import re
 import os
 from dotenv import load_dotenv
 
@@ -62,7 +63,6 @@ class ChatTester:
                 headers={"Content-Type": "application/json"},
                 timeout=10,
             )
-            print(response)
 
             if response.status_code == 200:
                 response_data = response.json()
@@ -99,6 +99,11 @@ def main():
     print("=====================================")
 
     chat = ChatTester()
+    
+    # Decodifica eventuali sequenze Unicode escape letterali (es. \u00e0 -> à)
+    # Usa re.sub per trovare e sostituire le sequenze \uXXXX
+    def decode_unicode_escape(match):
+        return chr(int(match.group(1), 16))
 
     try:
         while True:
@@ -116,7 +121,11 @@ def main():
             # Invia messaggio e mostra risposta
             if user_input:
                 response = chat.send_message(user_input)
-                print("\nBot > " + json.dumps(response, indent=2))
+                # Formatta il JSON e lo stampa in modo leggibile 
+                # rimuovendo le sequenze Unicode escape
+                pretty_json = json.dumps(response, indent=2)
+                pretty_json = re.sub(r'\\u([0-9a-fA-F]{4})', decode_unicode_escape, pretty_json)
+                print("\nBot > " + pretty_json)
 
     except KeyboardInterrupt:
         print("\n\nInterruzione da tastiera. Chiusura in corso...")

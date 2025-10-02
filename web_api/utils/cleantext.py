@@ -4,7 +4,7 @@ File:	/web_api/utils/cleantex.py
 @copyright	(c)2024 Rino Andriano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
 -----
-Last Modified: 	November 19th 2024 7:01:11 pm
+Last Modified: 	October 02nd 2025 06:59:11 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -37,16 +37,15 @@ Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la puntegg
 """
 
 import re
-from unidecode import unidecode
-
-"""
-"    Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.    
-"    Args:  text (str): Testo da pulire
-"    Returns:      str: Testo pulito e ottimizzato
-"""
 
 
 def clean_text(text):
+    """
+    "    Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.    
+    "    Args:  text (str): Testo da pulire
+    "    Returns:      str: Testo pulito e ottimizzato
+    """
+    
     # Rimuove emoji e caratteri speciali
     # Questo pattern copre la maggior parte degli emoji Unicode e altri simboli speciali
     text = re.sub(
@@ -69,6 +68,7 @@ def clean_text(text):
     text = re.sub(r"(\*+)", "", text)  # Rimuove gli asterischi
     text = re.sub(r"[\[\]\(\)\{\}]", "", text)  # Rimuove le parentesi
     text = re.sub(r"[/\\]", "", text)  # Rimuove slash e backslash
+    text = re.sub(r'"', '', text)      # Rimuove le doppie virgolette
 
     # Rimuove spazi prima della punteggiatura
     text = re.sub(r"\s+([.,!?;:])", r"\1", text)
@@ -76,17 +76,43 @@ def clean_text(text):
     # Rimuove spazi extra
     text = text.strip()
 
-    # Converte in ascii e restiuisce
-    return unidecode(text)
+    # Restituisce il testo ripulito
+    return text
 
+
+def clean_markdown(text):
+    """
+    " Rimuove gli eventuali blocchi di codice Markdown e spazi bianchi extra
+    " dal JSON generato come risposta da LLM (Es. Gemini 2.5)
+    " Args:  text (str): Testo JSON con blocchi di codice Markdown
+    " Returns:      str: Testo JSON pulito
+    """
+    
+    cleaned = text.strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]  # Rimuove ```json
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[3:]  # Rimuove ```
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3] # Rimuove ``` alla fine
+    cleaned = cleaned.strip()  # Rimuove eventuali spazi rimasti
+    return cleaned
 
 # test di utilizzo
 if __name__ == "__main__":
     test_text = """
     Ciao!! 😊 Come stai??? :) 
     \n\n Oggi (nota importante) è una bellissima giornata... 🌞 
-    Andiamo a fare una passeggiata [ore 15:00] nel parco! 🚶‍♂️ :D 
+    Andiamo a fare una "passeggiata" [ore 15:00] nel parco! 🚶‍♂️ :D 
     {nota: portare l'ombrello} *** ....
+    caratteri accentati: àèéìòù
+    numeri e simboli:1234567890 - _ + = < > / \ | ~ ` ^ & % $ # @ !
+    """
+
+    test_markdown = """
+    ```json
+    {'chunks': [{'text': 'Ciao! Sono NAO, un robot umanoide. ', 'movements': ['Gestures/Hey_(7)', 'Emotions/Positive/Happy_(4)']}, {'text': 'È un piacere conoscerti! Come posso esserti utile oggi?', 'movements': ['BodyTalk/Speaking/BodyTalk_(20)', 'Emotions/Positive/Happy_(4)']}]}
+    ```
     """
 
     cleaned = clean_text(test_text)
@@ -94,3 +120,11 @@ if __name__ == "__main__":
     print(test_text)
     print("\nTesto pulito:")
     print(cleaned)
+    print("\n-----")
+    
+    json = clean_markdown(test_markdown)
+    print("JSON originale:")
+    print(test_markdown)
+    print("\nJSON pulito:")
+    print(json)
+    
