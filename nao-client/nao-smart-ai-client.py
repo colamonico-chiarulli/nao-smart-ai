@@ -5,6 +5,9 @@ File:	/nao-client/nao-smart-ai-client.py
 @copyright	(c)2024 Rino Andriano
 Created Date: Wednesday, June 4th 2024, 6:11:00 pm
 -----
+Last Modified: 	October 6th 2025 5:35:00 pm
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
+-----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
     This program is free software: you can redistribute it and/or modify
@@ -117,9 +120,15 @@ class MyClass(GeneratedClass):
                 headers={"Content-Type": "application/json"},
                 timeout=10
             )
-
+            
+            # Controlla lo status della risposta
             if response.status_code == 200:
                 response_data = response.json()
+                # Salva il chat_id se presente nella risposta
+                if "chat_id" in response_data:
+                    self.chat_id = response_data["chat_id"]
+                    self.logger.info("Chat ID salvato: " + str(self.chat_id))
+                # Ritorna la risposta
                 return response_data.get("response")
 
             else:
