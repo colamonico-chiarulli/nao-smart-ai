@@ -3,6 +3,10 @@ web_api/logs/chat*.txt
 web_api/ai_prompts/colamonico_system.py
 web_api/utils/movements.json
 
+# Models - Ignora tutto il contenuto
+web_api/models/*
+!web_api/models/.gitkeep
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
