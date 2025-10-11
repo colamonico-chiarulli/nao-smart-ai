@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAO STT Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .config-section {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .config-label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .config-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .engine-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .engine-option {
+            padding: 15px;
+            border: 3px solid #d1d5db;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .engine-option:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        
+        .engine-option.selected {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+        
+        .engine-option.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .engine-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .engine-name {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+        
+        .engine-description {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .status-online {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-offline {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .status-recording {
+            background: #f59e0b;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #4b5563;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .input-section {
+            background: #f3f4f6;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .input-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .record-section {
+            text-align: center;
+        }
+        
+        .record-button {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .record-button.ready {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .record-button.recording {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+            animation: recordPulse 1s infinite;
+        }
+        
+        .record-button.processing {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        @keyframes recordPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .record-button:hover:not(:disabled) {
+            transform: scale(1.1);
+        }
+        
+        .record-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .info-text {
+            text-align: center;
+            color: #666;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .upload-section {
+            text-align: center;
+        }
+        
+        .upload-area {
+            border: 3px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        
+        .upload-area.dragging {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #374151;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .upload-subtext {
+            color: #6b7280;
+            font-size: 13px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .loaded-file {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .loaded-file.active {
+            display: block;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .file-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .file-icon {
+            font-size: 32px;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .file-size {
+            color: #6b7280;
+            font-size: 13px;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .test-button {
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover:not(:disabled) {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        
+        .test-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .test-button.processing {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+        
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            min-height: 120px;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+        
+        .result-text {
+            color: #1f2937;
+            font-size: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            min-height: 50px;
+        }
+        
+        .result-text.empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .log-section {
+            margin-top: 30px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .log-title {
+            font-weight: bold;
+            color: #374151;
+            font-size: 16px;
+        }
+        
+        .log-container {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            color: #e5e7eb;
+            padding: 8px;
+            border-bottom: 1px solid #374151;
+            line-height: 1.6;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-timestamp {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+        
+        .log-engine {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+        
+        .log-time {
+            color: #34d399;
+            font-weight: bold;
+        }
+        
+        .log-text {
+            color: #fbbf24;
+            margin-top: 4px;
+        }
+        
+        .log-empty {
+            color: #6b7280;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .visualizer-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .audio-visualizer {
+            width: 100%;
+            height: 60px;
+            background: #1f2937;
+            border-radius: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .log-container::-webkit-scrollbar-track {
+            background: #374151;
+            border-radius: 4px;
+        }
+        
+        .log-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        .log-container::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 NAO STT Test Interface</h1>
+        <div class="subtitle">Test interfaccia per Speech-to-Text con Vosk, Google, Whisper e Deepgram</div>
+        
+        <!-- Configurazione Server -->
+        <div class="config-section">
+            <label class="config-label">🔧 Server STT URL:</label>
+            <input 
+                type="text" 
+                id="serverUrl" 
+                class="config-input" 
+                value="http://127.0.0.1:5000"
+                placeholder="http://127.0.0.1:5000"
+            >
+            
+            <!-- Selezione Engine -->
+            <label class="config-label" style="margin-top: 20px;">⚙️ Seleziona motore STT:</label>
+            <div class="engine-selector">
+                <div class="engine-option selected" id="engineVosk" data-engine="vosk">
+                    <div class="engine-icon">🔴</div>
+                    <div class="engine-name">Vosk</div>
+                    <div class="engine-description">Offline - Locale</div>
+                </div>
+                <div class="engine-option" id="engineGoogle" data-engine="google">
+                    <div class="engine-icon">🌐</div>
+                    <div class="engine-name">Google</div>
+                    <div class="engine-description">Online - Cloud</div>
+                </div>
+                <div class="engine-option" id="engineWhisper" data-engine="whisper">
+                    <div class="engine-icon">🤖</div>
+                    <div class="engine-name">Whisper</div>
+                    <div class="engine-description">Offline - OpenAI</div>
+                </div>
+                <div class="engine-option" id="engineDeepgram" data-engine="deepgram">
+                    <div class="engine-icon">⚡</div>
+                    <div class="engine-name">Deepgram</div>
+                    <div class="engine-description">Online - Nova-2</div>
+                </div>
+            </div>
+            
+            <div class="status-row">
+                <span id="statusBadge" class="status-badge status-offline">⚫ Offline</span>
+                <button id="testConnectionBtn" class="btn btn-primary">🔍 Test Connessione</button>
+            </div>
+        </div>
+        
+        <!-- Sezione Input (Tabs) -->
+        <div class="input-section">
+            <div class="input-tabs">
+                <button class="tab-button active" id="tabRecord">🎙️ Registra Audio</button>
+                <button class="tab-button" id="tabUpload">📁 Carica File WAV</button>
+            </div>
+            
+            <!-- Tab Registrazione -->
+            <div class="tab-content active" id="contentRecord">
+                <div class="record-section">
+                    <button id="recordButton" class="record-button ready" disabled>
+                        <div id="buttonText">Caricamento...</div>
+                    </button>
+                    <div class="info-text" id="infoText">Testa prima la connessione al server</div>
+                    
+                    <div class="visualizer-container" id="visualizerContainer">
+                        <canvas id="visualizer" class="audio-visualizer"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Upload -->
+            <div class="tab-content" id="contentUpload">
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📂</div>
+                        <div class="upload-text">Clicca o trascina un file WAV</div>
+                        <div class="upload-subtext">Supporto file .wav (max 10MB)</div>
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept=".wav,audio/wav">
+                    
+                    <div class="loaded-file" id="loadedFile">
+                        <div class="file-info">
+                            <div class="file-details">
+                                <div class="file-icon">🎵</div>
+                                <div>
+                                    <div class="file-name" id="fileName">-</div>
+                                    <div class="file-size" id="fileSize">-</div>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-secondary" id="removeFileBtn">🗑️ Rimuovi</button>
+                            </div>
+                        </div>
+                        <audio controls class="audio-player" id="audioPlayer"></audio>
+                        
+                        <div class="test-buttons">
+                            <button class="test-button" id="testVosk" data-engine="vosk">
+                                🔴 Test Vosk
+                            </button>
+                            <button class="test-button" id="testGoogle" data-engine="google">
+                                🌐 Test Google
+                            </button>
+                            <button class="test-button" id="testWhisper" data-engine="whisper">
+                                🤖 Test Whisper
+                            </button>
+                            <button class="test-button" id="testDeepgram" data-engine="deepgram">
+                                ⚡ Test Deepgram
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Risultati -->
+        <div class="result-section">
+            <div class="result-label">📝 Trascrizione:</div>
+            <div id="resultText" class="result-text empty">
+                Nessuna trascrizione ancora disponibile
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">⏱️ Tempo</div>
+                    <div class="stat-value" id="processingTime">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">📊 Parole</div>
+                    <div class="stat-value" id="wordCount">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🎯 Engine</div>
+                    <div class="stat-value" id="engine">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">💯 Confidence</div>
+                    <div class="stat-value" id="confidence">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="log-section">
+            <div class="log-header">
+                <div class="log-title">📋 Log delle Trascrizioni</div>
+                <button id="clearLogBtn" class="btn btn-secondary">🗑️ Cancella Log</button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-empty">Nessuna trascrizione effettuata</div>
+            </div>
+        </div>
+        
+        <div id="errorMessage" class="message error-message"></div>
+        <div id="successMessage" class="message success-message"></div>
+        
+        <footer>
+            Powered by Vosk, Google Speech Recognition, Whisper & Deepgram • Colamonico Chiarulli
+        </footer>
+    </div>
+
+    <script>
+        // Configurazione
+        let serverUrl = 'http://127.0.0.1:5000';
+        let selectedEngine = 'vosk';
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioContext = null;
+        let analyser = null;
+        let animationId = null;
+        let streamRef = null;
+        let persistentStream = null;
+        let logEntries = [];
+        let uploadedFile = null;
+
+        // Elementi DOM
+        const serverUrlInput = document.getElementById('serverUrl');
+        const statusBadge = document.getElementById('statusBadge');
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const recordButton = document.getElementById('recordButton');
+        const buttonText = document.getElementById('buttonText');
+        const infoText = document.getElementById('infoText');
+        const resultText = document.getElementById('resultText');
+        const processingTime = document.getElementById('processingTime');
+        const wordCount = document.getElementById('wordCount');
+        const engineText = document.getElementById('engine');
+        const confidenceText = document.getElementById('confidence');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const visualizerContainer = document.getElementById('visualizerContainer');
+        const visualizer = document.getElementById('visualizer');
+        const engineVosk = document.getElementById('engineVosk');
+        const engineGoogle = document.getElementById('engineGoogle');
+        const engineWhisper = document.getElementById('engineWhisper');
+        const engineDeepgram = document.getElementById('engineDeepgram');
+        const logContainer = document.getElementById('logContainer');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        
+        // Tab elements
+        const tabRecord = document.getElementById('tabRecord');
+        const tabUpload = document.getElementById('tabUpload');
+        const contentRecord = document.getElementById('contentRecord');
+        const contentUpload = document.getElementById('contentUpload');
+        
+        // Upload elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loadedFile = document.getElementById('loadedFile');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        const testVosk = document.getElementById('testVosk');
+        const testGoogle = document.getElementById('testGoogle');
+        const testWhisper = document.getElementById('testWhisper');
+        const testDeepgram = document.getElementById('testDeepgram');
+
+        // Tab switching
+        tabRecord.addEventListener('click', () => {
+            tabRecord.classList.add('active');
+            tabUpload.classList.remove('active');
+            contentRecord.classList.add('active');
+            contentUpload.classList.remove('active');
+        });
+
+        tabUpload.addEventListener('click', () => {
+            tabUpload.classList.add('active');
+            tabRecord.classList.remove('active');
+            contentUpload.classList.add('active');
+            contentRecord.classList.remove('active');
+        });
+
+        // Upload area interactions
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.name.toLowerCase().endsWith('.wav')) {
+                showMessage('error', '❌ Solo file WAV sono supportati');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showMessage('error', '❌ File troppo grande (max 10MB)');
+                return;
+            }
+
+            uploadedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            
+            const url = URL.createObjectURL(file);
+            audioPlayer.src = url;
+            
+            loadedFile.classList.add('active');
+            showMessage('success', '✅ File caricato con successo');
+        }
+
+        removeFileBtn.addEventListener('click', () => {
+            uploadedFile = null;
+            loadedFile.classList.remove('active');
+            fileInput.value = '';
+            audioPlayer.src = '';
+            showMessage('success', '✅ File rimosso');
+        });
+
+        // Test buttons
+        async function testWithEngine(engine) {
+            if (!uploadedFile) {
+                showMessage('error', '❌ Nessun file caricato');
+                return;
+            }
+
+            const button = document.querySelector(`[data-engine="${engine}"]`);
+            button.disabled = true;
+            button.classList.add('processing');
+            button.textContent = '⏳ Elaborazione...';
+
+            try {
+                await sendAudioToServer(uploadedFile, engine);
+            } finally {
+                button.disabled = false;
+                button.classList.remove('processing');
+                const engineIcons = {
+                    'vosk': '🔴',
+                    'google': '🌐',
+                    'whisper': '🤖',
+                    'deepgram': '⚡'
+                };
+                const engineNames = {
+                    'vosk': 'Vosk',
+                    'google': 'Google',
+                    'whisper': 'Whisper',
+                    'deepgram': 'Deepgram'
+                };
+                button.textContent = `${engineIcons[engine]} Test ${engineNames[engine]}`;
+            }
+        }
+
+        testVosk.addEventListener('click', () => testWithEngine('vosk'));
+        testGoogle.addEventListener('click', () => testWithEngine('google'));
+        testWhisper.addEventListener('click', () => testWithEngine('whisper'));
+        testDeepgram.addEventListener('click', () => testWithEngine('deepgram'));
+
+        // Aggiorna URL server
+        serverUrlInput.addEventListener('change', () => {
+            serverUrl = serverUrlInput.value.trim();
+            console.log('Server URL aggiornato:', serverUrl);
+        });
+
+        // Selezione engine
+        function selectEngine(engine, element) {
+            if (element.classList.contains('unavailable')) {
+                showMessage('error', '❌ Motore non disponibile');
+                return;
+            }
+            
+            selectedEngine = engine;
+            [engineVosk, engineGoogle, engineWhisper, engineDeepgram].forEach(el => {
+                el.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            
+            const engineNames = {
+                'vosk': 'Vosk (offline)',
+                'google': 'Google Speech Recognition (online)',
+                'whisper': 'Whisper OpenAI (offline)',
+                'deepgram': 'Deepgram Nova-2 (online)'
+            };
+            
+            console.log('Engine selezionato:', engineNames[engine]);
+            showMessage('success', `✅ Motore selezionato: ${engineNames[engine]}`);
+            updateInfoText();
+        }
+
+        engineVosk.addEventListener('click', () => selectEngine('vosk', engineVosk));
+        engineGoogle.addEventListener('click', () => selectEngine('google', engineGoogle));
+        engineWhisper.addEventListener('click', () => selectEngine('whisper', engineWhisper));
+        engineDeepgram.addEventListener('click', () => selectEngine('deepgram', engineDeepgram));
+
+        // Aggiorna testo info in base al motore selezionato
+        function updateInfoText() {
+            if (!recordButton.disabled) {
+                const engineNames = {
+                    'vosk': 'Vosk (offline)',
+                    'google': 'Google (online)',
+                    'whisper': 'Whisper (offline)',
+                    'deepgram': 'Deepgram (online)'
+                };
+                infoText.textContent = `Clicca per registrare con ${engineNames[selectedEngine]}`;
+            }
+        }
+
+        // Aggiungi entry al log
+        function addLogEntry(engine, text, time, confidence = null) {
+            const timestamp = new Date().toLocaleTimeString('it-IT');
+            
+            const logEntry = {
+                timestamp,
+                engine,
+                text,
+                time,
+                confidence
+            };
+            
+            logEntries.unshift(logEntry);
+            
+            if (logEntries.length > 50) {
+                logEntries = logEntries.slice(0, 50);
+            }
+            
+            renderLog();
+        }
+
+        // Renderizza il log
+        function renderLog() {
+            if (logEntries.length === 0) {
+                logContainer.innerHTML = '<div class="log-empty">Nessuna trascrizione effettuata</div>';
+                return;
+            }
+            
+            logContainer.innerHTML = logEntries.map(entry => {
+                const confidenceStr = entry.confidence !== null 
+                    ? ` • Confidence: <span style="color: #34d399">${(entry.confidence * 100).toFixed(1)}%</span>` 
+                    : '';
+                
+                return `
+                    <div class="log-entry">
+                        <div class="log-timestamp">${entry.timestamp}</div>
+                        <div>
+                            <span class="log-engine">${entry.engine.toUpperCase()}</span> • 
+                            Tempo: <span class="log-time">${entry.time.toFixed(2)}s</span>${confidenceStr}
+                        </div>
+                        <div class="log-text">"${entry.text}"</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Cancella log
+        clearLogBtn.addEventListener('click', () => {
+            if (confirm('Vuoi cancellare tutto il log?')) {
+                logEntries = [];
+                renderLog();
+                showMessage('success', '✅ Log cancellato');
+            }
+        });
+
+        // Test connessione al server
+        async function testConnection() {
+            testConnectionBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${serverUrl}/stt/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Server status:', data);
+                    
+                    statusBadge.textContent = '🟢 Online';
+                    statusBadge.className = 'status-badge status-online';
+                    
+                    let availableEngines = [];
+                    if (data.engines) {
+                        if (data.engines.whisper && data.engines.whisper.status === 'unavailable') {
+                            engineWhisper.classList.add('unavailable');
+                            engineWhisper.querySelector('.engine-description').textContent = 'Non disponibile';
+                        } else {
+                            engineWhisper.classList.remove('unavailable');
+                            availableEngines.push('whisper');
+                        }
+                        
+                        if (data.engines.deepgram && data.engines.deepgram.status === 'unavailable') {
+                            engineDeepgram.classList.add('unavailable');
+                            engineDeepgram.querySelector('.engine-description').textContent = 'Non disponibile';
+                        } else {
+                            engineDeepgram.classList.remove('unavailable');
+                            availableEngines.push('deepgram');
+                        }
+                        
+                        if (data.engines.vosk && data.engines.vosk.status === 'available') {
+                            availableEngines.push('vosk');
+                        }
+                        
+                        if (data.engines.google && data.engines.google.status === 'available') {
+                            availableEngines.push('google');
+                        }
+                    }
+                    
+                    const engineInfo = availableEngines.length > 0 
+                        ? `Motori disponibili: ${availableEngines.join(', ')}` 
+                        : '';
+                    
+                    showMessage('success', `✅ Server connesso! ${engineInfo}`);
+                    
+                    await initializeMicrophone();
+                    
+                } else {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Errore connessione:', error);
+                statusBadge.textContent = '⚫ Offline';
+                statusBadge.className = 'status-badge status-offline';
+                showMessage('error', `❌ Impossibile connettersi al server: ${error.message}`);
+                recordButton.disabled = true;
+            } finally {
+                testConnectionBtn.disabled = false;
+            }
+        }
+
+        // Inizializza microfono
+        async function initializeMicrophone() {
+            if (persistentStream) {
+                console.log('Stream già attivo');
+                recordButton.disabled = false;
+                buttonText.textContent = '🎤 Registra';
+                updateInfoText();
+                return;
+            }
+
+            try {
+                console.log('Richiesta accesso microfono...');
+                persistentStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        channelCount: 1,
+                        sampleRate: 16000,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    } 
+                });
+                
+                console.log('✅ Accesso microfono autorizzato');
+                
+                recordButton.disabled = false;
+                buttonText.textContent = '🎤 Registra';
+                updateInfoText();
+                
+                showMessage('success', '✅ Microfono pronto!');
+                
+            } catch (error) {
+                console.error('Errore accesso microfono:', error);
+                showMessage('error', `❌ Impossibile accedere al microfono: ${error.message}`);
+                recordButton.disabled = true;
+            }
+        }
+
+        // Mostra messaggio
+        function showMessage(type, message) {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            if (type === 'error') {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            } else if (type === 'success') {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+            }
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // Converti audio in WAV
+        function audioBufferToWav(audioBuffer) {
+            const numOfChan = 1;
+            const length = audioBuffer.length * numOfChan * 2;
+            const buffer = new ArrayBuffer(44 + length);
+            const view = new DataView(buffer);
+            let pos = 0;
+
+            function setString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            setString(view, pos, 'RIFF'); pos += 4;
+            view.setUint32(pos, 36 + length, true); pos += 4;
+            setString(view, pos, 'WAVE'); pos += 4;
+            setString(view, pos, 'fmt '); pos += 4;
+            view.setUint32(pos, 16, true); pos += 4;
+            view.setUint16(pos, 1, true); pos += 2;
+            view.setUint16(pos, numOfChan, true); pos += 2;
+            view.setUint32(pos, audioBuffer.sampleRate, true); pos += 4;
+            view.setUint32(pos, audioBuffer.sampleRate * 2 * numOfChan, true); pos += 4;
+            view.setUint16(pos, numOfChan * 2, true); pos += 2;
+            view.setUint16(pos, 16, true); pos += 2;
+            setString(view, pos, 'data'); pos += 4;
+            view.setUint32(pos, length, true); pos += 4;
+
+            const channelData = audioBuffer.getChannelData(0);
+            for (let i = 0; i < channelData.length; i++) {
+                const sample = Math.max(-1, Math.min(1, channelData[i]));
+                view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                pos += 2;
+            }
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        // Inizializza audio context per visualizzazione
+        function initAudioContext(stream) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            
+            visualizerContainer.style.display = 'block';
+            visualize();
+        }
+
+        // Visualizzazione forma d'onda
+        function visualize() {
+            const canvas = visualizer;
+            const canvasCtx = canvas.getContext('2d');
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            function draw() {
+                if (!isRecording) {
+                    visualizerContainer.style.display = 'none';
+                    return;
+                }
+
+                animationId = requestAnimationFrame(draw);
+                analyser.getByteTimeDomainData(dataArray);
+
+                canvasCtx.fillStyle = '#1f2937';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = '#667eea';
+                canvasCtx.beginPath();
+
+                const sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * canvas.height / 2;
+
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
+                }
+
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
+            }
+
+            draw();
+        }
+
+        // Inizia registrazione
+        async function startRecording() {
+            if (!persistentStream) {
+                showMessage('error', '❌ Stream audio non disponibile');
+                return;
+            }
+
+            try {
+                streamRef = persistentStream;
+                initAudioContext(streamRef);
+
+                mediaRecorder = new MediaRecorder(streamRef);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    console.log('Registrazione fermata, conversione in WAV...');
+                    
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const arrayBuffer = await audioBlob.arrayBuffer();
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    const wavBlob = audioBufferToWav(audioBuffer);
+                    
+                    console.log('Audio convertito in WAV, dimensione:', wavBlob.size, 'bytes');
+                    
+                    await sendAudioToServer(wavBlob, selectedEngine);
+                    
+                    if (audioContext) {
+                        audioContext.close();
+                        audioContext = null;
+                    }
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+
+                recordButton.className = 'record-button recording';
+                buttonText.textContent = '⏹️ Stop';
+                infoText.textContent = 'Registrazione in corso... Clicca per fermare';
+                statusBadge.textContent = '🔴 Registrando';
+                statusBadge.className = 'status-badge status-recording';
+
+            } catch (error) {
+                console.error('Errore avvio registrazione:', error);
+                showMessage('error', `❌ Errore registrazione: ${error.message}`);
+            }
+        }
+
+        // Ferma registrazione
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                isRecording = false;
+
+                recordButton.className = 'record-button processing';
+                buttonText.textContent = '⏳ Elaborazione...';
+                
+                const engineNames = {
+                    'vosk': 'Vosk',
+                    'google': 'Google',
+                    'whisper': 'Whisper',
+                    'deepgram': 'Deepgram'
+                };
+                infoText.textContent = `Invio a ${engineNames[selectedEngine]}...`;
+                recordButton.disabled = true;
+            }
+        }
+
+        // Invia audio al server
+        async function sendAudioToServer(audioBlob, engine = selectedEngine) {
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.wav');
+
+                const endpoints = {
+                    'vosk': '/stt/vosk',
+                    'google': '/stt/google',
+                    'whisper': '/stt/whisper',
+                    'deepgram': '/stt/deepgram'
+                };
+                const endpoint = endpoints[engine];
+                
+                console.log(`Invio audio a ${engine.toUpperCase()}... Dimensione:`, audioBlob.size, 'bytes');
+                console.log(`Endpoint: ${serverUrl}${endpoint}`);
+
+                const response = await fetch(`${serverUrl}${endpoint}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log('Risposta server:', data);
+
+                if (response.ok && data.success) {
+                    const transcribedText = data.text || 'Nessun testo riconosciuto';
+                    resultText.textContent = transcribedText;
+                    resultText.className = 'result-text';
+                    
+                    const procTime = data.processing_time?.toFixed(2) || '0';
+                    processingTime.textContent = `${procTime}s`;
+                    wordCount.textContent = data.word_count || '0';
+                    engineText.textContent = data.engine?.toUpperCase() || engine.toUpperCase();
+                    
+                    if (data.confidence !== undefined && data.confidence !== null) {
+                        confidenceText.textContent = `${(data.confidence * 100).toFixed(1)}%`;
+                    } else {
+                        confidenceText.textContent = '-';
+                    }
+                    
+                    const engineNames = {
+                        'vosk': 'Vosk',
+                        'google': 'Google',
+                        'whisper': 'Whisper',
+                        'deepgram': 'Deepgram'
+                    };
+                    const engineName = engineNames[data.engine] || engineNames[engine];
+                    const onlineStatus = data.offline === false ? ' (online)' : ' (offline)';
+                    showMessage('success', `✅ Trascrizione ${engineName}${onlineStatus} completata in ${procTime}s`);
+                    
+                    addLogEntry(
+                        data.engine || engine,
+                        transcribedText,
+                        data.processing_time || 0,
+                        data.confidence
+                    );
+                    
+                } else {
+                    showMessage('error', `❌ Errore: ${data.error || 'Errore sconosciuto'}`);
+                    resultText.textContent = 'Errore nella trascrizione';
+                    resultText.className = 'result-text empty';
+                }
+
+            } catch (error) {
+                console.error('Errore invio audio:', error);
+                showMessage('error', `❌ Errore comunicazione con server: ${error.message}`);
+            } finally {
+                recordButton.className = 'record-button ready';
+                buttonText.textContent = '🎤 Registra';
+                updateInfoText();
+                recordButton.disabled = false;
+                statusBadge.textContent = '🟢 Online';
+                statusBadge.className = 'status-badge status-online';
+            }
+        }
+
+        // Event listeners
+        testConnectionBtn.addEventListener('click', testConnection);
+
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        // Test connessione automatico all'avvio
+        window.addEventListener('load', () => {
+            console.log('Pagina caricata, test connessione automatico...');
+            setTimeout(testConnection, 500);
+        });
+    </script>
+</body>
+</html>

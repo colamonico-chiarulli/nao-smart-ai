@@ -44,7 +44,7 @@ The following attribution requirements apply to this work:
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from utils.gemini_chat_api import GeminiChatAPI
-from utils.stt_vosk import VoskSTT
+from utils.stt import STT
 
 
 def create_app():
@@ -59,11 +59,11 @@ def create_app():
     chat_api = GeminiChatAPI()
 
     # Inizializza sistema STT Vosk
-    stt_vosk = VoskSTT(logger=chat_api.logger)
+    stt = STT(logger=chat_api.logger)
     
     # Stampa messaggio di errore se Vosk non è disponibile
-    if not stt_vosk.is_available and stt_vosk.error_message:
-        print(stt_vosk.error_message)
+    if not stt.is_available and stt.error_message:
+        print(stt.error_message)
 
 
     @app.route("/chat", methods=["POST"])
@@ -117,8 +117,16 @@ def create_app():
         Endpoint per Speech-to-Text con Vosk (offline)
         Richiede un file audio WAV mono 16bit come 'audio' in multipart/form-data
         """
-        return stt_vosk.handle_stt_request()
+        return stt.handle_stt_request()
     
+    @app.route("/stt/status", methods=["GET"])
+    def stt_status():
+        """
+        Endpoint per verificare lo stato del server e motore STT
+        """
+        return jsonify(stt.get_status()), 200
+
+
     return app
 
 
@@ -128,8 +136,8 @@ if __name__ == "__main__":
     ##############################
     # DEBUG
     ##############################
-    #app.run(host="127.0.0.1", port=3030, debug=True)
-
+    # NAO Local
+    #app.run(host='0.0.0.0',port=5000,debug=False,threaded=True)
     ##############################
     # PRODUCTION GUNICORN
     ##############################

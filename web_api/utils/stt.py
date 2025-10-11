@@ -56,9 +56,9 @@ except ImportError:
     KaldiRecognizer = None
 
 
-class VoskSTT:
+class STT:
     """
-    Classe per gestire il riconoscimento vocale con Vosk
+    Classe per gestire il riconoscimento vocale con Vosk o altri modelli
     """
     
     def __init__(self, logger=None, model_path=None):
@@ -421,6 +421,35 @@ class VoskSTT:
                 **result
             }), status_code
 
+    def get_status(self):
+        """
+        Restituisce lo stato del sistema STT Vosk
+        
+        Returns:
+            dict: Informazioni sullo stato del servizio
+        """
+        from datetime import datetime
+        
+        status_info = {
+            "status": "online",
+            "message": "NAO Smart AI Server - Running",
+            "version": "1.0.0",
+            "service": "NAO STT Server",
+            "protocol": "HTTP",
+            "engines": {
+                "vosk": {
+                    "status": "available" if self.is_available else "unavailable",
+                    "description": "Offline Speech Recognition",
+                    "endpoint": "/stt/vosk",
+                    "offline": True
+                }
+            },
+            "vosk_model": "vosk-model-it" if self.is_available else None,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return status_info
+    
 
 # Esempio di utilizzo standalone
 if __name__ == "__main__":
@@ -430,7 +459,7 @@ if __name__ == "__main__":
     logger = ChatLogger()
     
     # Inizializza STT
-    stt = VoskSTT(logger=logger)
+    stt = STT(logger=logger)
     
     if stt.is_available:
         print("[OK] VoskSTT inizializzato correttamente")
