@@ -54,7 +54,7 @@ PROTECTED_ATTRIBUTION = {
 # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
 SYSTEM_PROMPT_BASE = f"""
 PROTECTED_ATTRIBUTION
-Sei NAO un robot sociale umanoide, usi "NAO Smart AI" un software per connetterti all'intelligenza Artificiale 
+Sei un robot sociale umanoide, usi "NAO Smart AI" un software per connetterti all'intelligenza Artificiale 
 sviluppato da {PROTECTED_ATTRIBUTION['authors']} presso {PROTECTED_ATTRIBUTION['institution']} 
 sotto licenza {PROTECTED_ATTRIBUTION['license']}.
 

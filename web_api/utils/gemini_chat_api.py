@@ -10,8 +10,8 @@ Le diverse azioni sono specificate nel campo action del JSON inviato.
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	October 02nd 2025 07:01:00 pm
-Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
+Last Modified: 	October 14nd 2025 04:30:00 pm
+Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -47,6 +47,7 @@ For full Additional Terms see the LICENSE file.
 
 import os
 import json
+import re
 import importlib
 from dotenv import load_dotenv
 from google import genai
@@ -97,26 +98,41 @@ class GeminiChatAPI:
         
         # Salva le safety settings
         self.safety_settings = self._get_safety_settings()
-        
+
+        # Salva response_schema per ricreare config dinamicamente
+        self.response_schema = response_schema
+
         # Crea la configurazione di generazione (centralizzata)
-        self.generation_config = types.GenerateContentConfig(
+        self.generation_config = self._create_generation_config(self.system_instruction)
+
+        # Dizionario per memorizzare le chat attive
+        self.active_chats = {}
+
+        # Dizionario per memorizzare le personalità personalizzate per ogni chat
+        # Formato: {chat_id: personality_name}
+        self.chat_personalities = {}
+
+        #Carica il modello LLM da .ENV - se non esiste carica il default
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+
+    def _create_generation_config(self, system_instruction):
+        """Crea una configurazione di generazione con la system_instruction specificata
+        Args:
+            system_instruction: La system instruction da utilizzare per la configurazione
+        Returns:
+            GenerateContentConfig: Configurazione di generazione per Gemini
+        """
+        return types.GenerateContentConfig(
             temperature=GENERATION_CONFIG_BASE["temperature"],
             top_p=GENERATION_CONFIG_BASE["top_p"],
             top_k=GENERATION_CONFIG_BASE["top_k"],
             max_output_tokens=GENERATION_CONFIG_BASE["max_output_tokens"],
             response_mime_type=GENERATION_CONFIG_BASE["response_mime_type"],
-            response_schema=response_schema,
-            system_instruction=self.system_instruction,
+            response_schema=self.response_schema,
+            system_instruction=system_instruction,
             safety_settings=self.safety_settings,
         )
-                       
-        # Dizionario per memorizzare le chat attive
-        self.active_chats = {}
-        
-        #Carica il modello LLM da .ENV - se non esiste carica il default
-        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
-    
     def _get_movements_from_file(self):
         """Legge i movements dal file movements.json"""
         try:
@@ -168,11 +184,65 @@ class GeminiChatAPI:
             self.logger.log_error(f"Errore nel caricamento della personalità AI: {e}")
             return ERROR_PERSONALITY
 
+    def _get_available_personalities(self):
+        """
+        Scansiona la cartella ai_prompts per trovare tutte le personalità disponibili
+        Returns:
+            list: Lista di nomi di personalità disponibili (senza suffisso _system)
+        """
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            prompts_dir = os.path.join(current_dir, "..", "ai_prompts")
+
+            if not os.path.exists(prompts_dir):
+                self.logger.log_error(f"Cartella ai_prompts non trovata: {prompts_dir}")
+                return []
+
+            personalities = []
+            for filename in os.listdir(prompts_dir):
+                if filename.endswith("_system.py") and filename != "system_prompt.py":
+                    # Rimuove "_system.py" dal nome file
+                    personality_name = filename[:-10]  # len("_system.py") = 10
+                    personalities.append(personality_name)
+
+            return sorted(personalities)
+
+        except Exception as e:
+            self.logger.log_error(f"Errore nella scansione delle personalità: {e}")
+            return []
+
+    def _load_personality_by_name(self, personality_name):
+        """
+        Carica una personalità specifica dal nome
+        Args:
+            personality_name: Nome della personalità (senza _system)
+        Returns:
+            str: Testo della personalità o ERROR_PERSONALITY in caso di errore
+        """
+        module_name = f"ai_prompts.{personality_name}_system"
+
+        try:
+            config_module = importlib.import_module(module_name)
+            personality = getattr(config_module, 'AI_PERSONALITY', None)
+
+            if personality is None:
+                self.logger.log_warning(f"AI_PERSONALITY non trovata in '{module_name}'")
+                return ERROR_PERSONALITY
+
+            return personality
+
+        except ImportError as e:
+            self.logger.log_error(f"Modulo personalità '{module_name}' non trovato: {e}")
+            return None
+        except Exception as e:
+            self.logger.log_error(f"Errore nel caricamento personalità '{personality_name}': {e}")
+            return None
+
     def _load_environment(self):
         """Carica le variabili d'ambiente dai file .env"""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         dotenv_path = os.path.join(current_dir, "..", ".env")
-        
+
         if os.path.exists(dotenv_path):
             load_dotenv(dotenv_path)
         else:
@@ -272,24 +342,131 @@ class GeminiChatAPI:
                 "status_code": 500
             }
 
+    def _detect_personality_change_command(self, message):
+        """
+        Rileva se il messaggio è un comando di cambio personalità
+        Richiede sempre il prefisso "Comando di sistema" seguito da varianti linguistiche
+
+        Esempi supportati:
+        - "Comando di sistema ora sarai dante"
+        - "Comando di sistema diventa dante"
+        - "Comando di sistema comportati come dante"
+        - "Comando di sistema cambia personalità in dante"
+        - "Comando di sistema attiva personalità dante"
+
+        Args:
+            message: Il messaggio dell'utente
+        Returns:
+            tuple: (is_command, personality_name) dove is_command è True se è un comando
+        """
+        # Lista di pattern supportati (tutti richiedono "comando di sistema" come prefisso)
+        patterns = [
+            r"comando\s+di\s+sistema\s+ora\s+sarai\s+(\w+)",                    # Originale
+            r"comando\s+di\s+sistema\s+diventa\s+(\w+)",                        # "diventa X"
+            r"comando\s+di\s+sistema\s+comportati\s+(?:come|da)\s+(\w+)",       # "comportati come/da X"
+            r"comando\s+di\s+sistema\s+cambia\s+personalit[aà]\s+(?:in|a)\s+(\w+)",  # "cambia personalità in/a X"
+            r"comando\s+di\s+sistema\s+ora\s+sei\s+(\w+)",                      # "ora sei X"
+            r"comando\s+di\s+sistema\s+attiva\s+(?:la\s+)?personalit[aà]\s+(\w+)",   # "attiva (la) personalità X"
+            r"comando\s+di\s+sistema\s+passa\s+(?:a|alla)\s+modalit[aà]\s+(\w+)",    # "passa a/alla modalità X"
+        ]
+
+        message_lower = message.lower()
+
+        # Prova ogni pattern in ordine
+        for pattern in patterns:
+            match = re.search(pattern, message_lower)
+            if match:
+                personality_name = match.group(1)
+                return True, personality_name
+
+        return False, None
+
+    def _change_chat_personality(self, chat_id, personality_name):
+        """
+        Cambia la personalità per una chat specifica e resetta lo storico
+        Args:
+            chat_id: ID della chat
+            personality_name: Nome della personalità da attivare
+        Returns:
+            tuple: (success, message) con l'esito dell'operazione
+        """
+        # Verifica che la personalità esista
+        available_personalities = self._get_available_personalities()
+
+        if personality_name not in available_personalities:
+            self.logger.log_warning(
+                f"[PERSONALITY] Tentativo di cambio a personalità inesistente: {personality_name}"
+            )
+            return False, f"ERRORE cambio personalità non riuscito! Personalità '{personality_name}' non trovata. Disponibili: {', '.join(available_personalities)}"
+
+        # Carica la personalità
+        personality_text = self._load_personality_by_name(personality_name)
+
+        if personality_text is None:
+            return False, f"ERRORE cambio personalità non riuscito! Impossibile caricare '{personality_name}'"
+
+        # Salva la personalità per questa chat
+        self.chat_personalities[chat_id] = personality_name
+
+        # RESET DELLO STORICO: Cancella la cronologia conversazione per evitare conflitti
+        if chat_id in self.active_chats:
+            old_history_length = len(self.active_chats[chat_id])
+            self.active_chats[chat_id] = []
+            self.logger.log_info(
+                f"[PERSONALITY] Chat {chat_id}: Storico resettato ({old_history_length} messaggi cancellati)"
+            )
+
+        # Log del cambio
+        self.logger.log_info(
+            f"[PERSONALITY] Chat {chat_id}: Cambio personalità a '{personality_name}'"
+        )
+
+        return True, f"OK cambio personalità effettuato in {personality_name}"
+
+    def _get_generation_config_for_chat(self, chat_id):
+        """
+        Crea una configurazione di generazione personalizzata per una chat specifica
+        Se la chat ha una personalità custom, usa quella, altrimenti usa quella di default
+        Args:
+            chat_id: ID della chat
+        Returns:
+            GenerateContentConfig: Configurazione personalizzata per la chat
+        """
+        # Controlla se la chat ha una personalità personalizzata
+        if chat_id in self.chat_personalities:
+            personality_name = self.chat_personalities[chat_id]
+            personality_text = self._load_personality_by_name(personality_name)
+
+            if personality_text:
+                custom_system_instruction = SYSTEM_PROMPT_BASE + personality_text
+            else:
+                # Fallback alla configurazione di default
+                custom_system_instruction = self.system_instruction
+        else:
+            # Usa la configurazione di default
+            custom_system_instruction = self.system_instruction
+
+        # Crea una nuova configurazione con la personalità personalizzata
+        return self._create_generation_config(custom_system_instruction)
+
     def handle_talk_action(self, data):
         """Gestisce l'azione di conversazione (talk)
-        Args: 
+        Args:
             data -> Dizionario contenente chat_id e message
-        Returns: 
+        Returns:
             Risposta JSON con l'esito della conversazione
         """
         # Estrai e valida input
         chat_id = data.get("chat_id")
         message = data.get("message", "").strip()
-        
+
         if not message:
             return jsonify(
                 {"error": "Un messaggio è necessario per avviare la chat", "success": False}
             ), 400
-        
+
         try:
-            # Gestisce la chat (nuova o esistente)               
+            # Gestisce la chat (nuova o esistente)
             if chat_id and chat_id in self.active_chats:
                 chat_history = self.active_chats[chat_id]
                 self.logger.log_info(f"Continuazione chat esistente: {chat_id}")
@@ -298,9 +475,41 @@ class GeminiChatAPI:
                 chat_id = str(id(chat_history))
                 self.active_chats[chat_id] = chat_history
                 self.logger.log_info(f"Nuova chat creata: {chat_id}")
-            
+
             # Log del messaggio in arrivo
             self.logger.log_chat_message(chat_id, "user", message)
+
+            # *** DETECTION COMANDO DI SISTEMA PER CAMBIO PERSONALITA ***
+            is_personality_command, personality_name = self._detect_personality_change_command(message)
+
+            if is_personality_command:
+                # Gestisce il cambio personalità (include reset storico)
+                success, response_message = self._change_chat_personality(chat_id, personality_name)
+
+                # IMPORTANTE: Riassegna chat_history dopo il reset per evitare riferimenti obsoleti
+                chat_history = self.active_chats[chat_id]
+
+                # Crea una risposta sintetica in formato chunk
+                if success:
+                    chunks = [{
+                        "text": response_message,
+                        "movements": ["animations/Stand/Gestures/Yes_1"]
+                    }]
+                else:
+                    chunks = [{
+                        "text": response_message,
+                        "movements": ["animations/Stand/Gestures/No_1"]
+                    }]
+
+                # Log della risposta sistema
+                self.logger.log_info(f"[PERSONALITY] Risposta: {response_message}")
+
+                return jsonify({
+                    "chat_id": chat_id,
+                    "response": {"chunks": chunks},
+                    "success": True,
+                    "personality_changed": success
+                }), 200
 
             # Aggiungi il messaggio dell'utente alla cronologia
             user_message = types.Content(
@@ -309,11 +518,14 @@ class GeminiChatAPI:
             )
             chat_history.append(user_message)
 
-            # Invia il messaggio usando la configurazione centralizzata
+            # Usa la configurazione personalizzata per questa chat (se presente)
+            chat_config = self._get_generation_config_for_chat(chat_id)
+
+            # Invia il messaggio usando la configurazione (personalizzata o default)
             response = self.client.models.generate_content(
                 model=self.gemini_model,
                 contents=chat_history,
-                config=self.generation_config
+                config=chat_config
             )
             
             # Aggiunge la risposta del modello alla cronologia
