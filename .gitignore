@@ -10,6 +10,10 @@ web_api/utils/actions_map.json
 web_api/models/*
 !web_api/models/.gitkeep
 
+# Models - Ignora tutto il contenuto
+web_api/models/*
+!web_api/models/.gitkeep
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
