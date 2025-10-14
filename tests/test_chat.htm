@@ -1,0 +1,721 @@
+<!--
+File:	/tests/test_chat.htm
+-----
+Web client Test API - NAO-Smart-AI API
+-----
+@author  Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+@copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
+Created Date: Friday, October 10th 2025, 18:30:00 pm
+-----
+Last Modified: 	October 10th 2025, 19:00:00 pm
+Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+-----
+@license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    
+Additional Terms under Section 7(b):
+
+The following attribution requirements apply to this work:
+
+1. Copyright notices and author attribution in source code files
+   cannot be removed or altered.
+2. Any interactive user interface must preserve and display
+   author attribution (Copyright, authors, project name).
+3. System prompts containing author information cannot be modified
+4. Public demonstrations, publications and derivative works
+   must credit the original authors.
+
+For full Additional Terms see the LICENSE file.
+------------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAO Smart AI - Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .robot-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .header-info h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .header-info p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status-indicator {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: #f87171;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .config-panel {
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .config-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .config-input label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .config-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f1f5f9;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #1e293b;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-timestamp {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .movements-tag {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            margin: 4px 4px 0 0;
+            font-weight: 500;
+        }
+
+        .movements-container {
+            margin-top: 8px;
+        }
+
+        .loading {
+            display: flex;
+            gap: 6px;
+            padding: 12px 16px;
+        }
+
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #messageInput:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #dc2626;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin: 10px 20px;
+            border-left: 4px solid #dc2626;
+            font-size: 14px;
+        }
+
+        .chat-id-display {
+            font-size: 11px;
+            color: #64748b;
+            padding: 8px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="robot-icon">🤖</div>
+            <div class="header-info">
+                <h1>NAO Smart AI</h1>
+                <p>Robot Sociale Umanoide - IISS Colamonico Chiarulli</p>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connesso</span>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <div class="config-input">
+                <label>API URL:</label>
+                <input type="text" id="apiUrl" placeholder="http://127.0.0.1:5000/chat" value="http://127.0.0.1:5000/chat">
+            </div>
+        </div>
+
+        <div class="chat-id-display" id="chatIdDisplay" style="display: none;">
+            Chat ID: <span id="chatIdValue"></span>
+        </div>
+
+        <div class="messages-container" id="messagesContainer"></div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Scrivi un messaggio a NAO..." 
+                    autocomplete="off"
+                >
+                <button class="btn btn-send" id="sendBtn">
+                    <span>📤</span> Invia
+                </button>
+                <button class="btn btn-clear" id="clearBtn">
+                    🗑️ Pulisci
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chatId = null;
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const apiUrlInput = document.getElementById('apiUrl');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const chatIdDisplay = document.getElementById('chatIdDisplay');
+        const chatIdValue = document.getElementById('chatIdValue');
+
+        // Mappa delle emoticon per i movimenti
+        const movementEmojis = {
+            'BodyTalk': '💬',
+            'Thinking': '🤔',
+            'Angry': '😠',
+            'Anxious': '😰',
+            'Bored': '😑',
+            'Disappointed': '😞',
+            'Exhausted': '😫',
+            'Fear': '😨',
+            'Fearful': '😱',
+            'Frustrated': '😤',
+            'Humiliated': '😳',
+            'Hurt': '😢',
+            'Late': '⏰',
+            'Sad': '😢',
+            'Shocked': '😲',
+            'Sorry': '🙏',
+            'Surprise': '😮',
+            'Alienated': '🤷',
+            'Annoyed': '😒',
+            'AskForAttention': '👋',
+            'Cautious': '🤨',
+            'Confused': '😕',
+            'Determined': '😤',
+            'Embarrassed': '😅',
+            'Hello': '👋',
+            'Hesitation': '😬',
+            'Innocent': '😇',
+            'Lonely': '😔',
+            'Mischievous': '😏',
+            'Puzzled': '🤔',
+            'Sneeze': '🤧',
+            'Stubborn': '😠',
+            'Suspicious': '🤨',
+            'Amused': '😄',
+            'Confident': '😎',
+            'Ecstatic': '🤩',
+            'Enthusiastic': '🤗',
+            'Excited': '😃',
+            'Happy': '😊',
+            'Hungry': '🍕',
+            'Hysterical': '😂',
+            'Interested': '🧐',
+            'Laugh': '😄',
+            'Mocker': '😏',
+            'Optimistic': '😊',
+            'Peaceful': '😌',
+            'Proud': '😌',
+            'Relieved': '😅',
+            'Shy': '😊',
+            'Sure': '👍',
+            'Winner': '🏆',
+            'Applause': '👏',
+            'Bow': '🙇',
+            'But': '☝️',
+            'CalmDown': '🤚',
+            'Caress': '🤗',
+            'CatchFly': '🦟',
+            'Choice': '🤷',
+            'Claw': '✊',
+            'Coaxing': '🤝',
+            'ComeOn': '👍',
+            'Count': '🔢',
+            'Desperate': '😩',
+            'Everything': '🌍',
+            'Explain': '👨‍🏫',
+            'Far': '👉',
+            'Follow': '🚶',
+            'Freeze': '🧊',
+            'Give': '🎁',
+            'Great': '👍',
+            'HeSays': '💬',
+            'Hey': '👋',
+            'Hide': '🙈',
+            'IDontKnow': '🤷',
+            'JointHands': '🙏',
+            'Joy': '😄',
+            'Kisses': '😘',
+            'Look': '👀',
+            'Maybe': '🤔',
+            'Me': '👤',
+            'Mime': '🎭',
+            'Next': '➡️',
+            'No': '❌',
+            'Nothing': '🚫',
+            'OnTheEvening': '🌙',
+            'Please': '🙏',
+            'Reject': '🙅',
+            'Salute': '👋',
+            'Shoot': '🎯',
+            'ShowFloor': '⬇️',
+            'ShowSky': '⬆️',
+            'Stretch': '🤸',
+            'Surprised': '😮',
+            'Take': '🤲',
+            'This': '👈',
+            'WhatSThis': '❓',
+            'Wings': '🦅',
+            'Yes': '✅',
+            'You': '👉',
+            'YouKnowWhat': '💡',
+            'Yum': '😋',
+            'Speaking': '🗣️',
+            'Remember': '💭'
+        };
+
+        function getEmojiForMovement(movement) {
+            // Cerca una corrispondenza nella mappa
+            for (const [key, emoji] of Object.entries(movementEmojis)) {
+                if (movement.includes(key)) {
+                    return emoji;
+                }
+            }
+            return '🤖'; // emoji di default
+        }
+
+        function updateStatus(connected) {
+            if (connected) {
+                statusDot.classList.remove('disconnected');
+                statusText.textContent = 'Connesso';
+            } else {
+                statusDot.classList.add('disconnected');
+                statusText.textContent = 'Disconnesso';
+            }
+        }
+
+        function updateChatId(id) {
+            if (id) {
+                chatId = id;
+                chatIdValue.textContent = id;
+                chatIdDisplay.style.display = 'block';
+            }
+        }
+
+        function addMessage(text, isUser, movements = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+
+            if (movements && movements.length > 0) {
+                const movementsDiv = document.createElement('div');
+                movementsDiv.className = 'movements-container';
+                movements.forEach(mov => {
+                    const tag = document.createElement('span');
+                    tag.className = 'movements-tag';
+                    tag.textContent = mov.replace('animations/Stand/', '');
+                    movementsDiv.appendChild(tag);
+                });
+                contentDiv.appendChild(movementsDiv);
+            }
+
+            const timestamp = document.createElement('div');
+            timestamp.className = 'message-timestamp';
+            timestamp.textContent = new Date().toLocaleTimeString('it-IT', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            contentDiv.appendChild(timestamp);
+
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addLoadingIndicator() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot';
+            loadingDiv.id = 'loadingIndicator';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content loading';
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'loading-dot';
+                contentDiv.appendChild(dot);
+            }
+            
+            loadingDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(loadingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeLoadingIndicator() {
+            const loading = document.getElementById('loadingIndicator');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = `❌ Errore: ${message}`;
+            messagesContainer.appendChild(errorDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            setTimeout(() => errorDiv.remove(), 5000);
+            updateStatus(false);
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            const apiUrl = apiUrlInput.value.trim();
+            if (!apiUrl) {
+                showError('Inserisci un URL API valido');
+                return;
+            }
+
+            addMessage(message, true);
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            addLoadingIndicator();
+
+            const payload = {
+                action: 'talk',
+                message: message
+            };
+
+            if (chatId) {
+                payload.chat_id = chatId;
+            }
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                removeLoadingIndicator();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStatus(true);
+                    updateChatId(data.chat_id);
+                    
+                    if (data.response && data.response.chunks) {
+                        data.response.chunks.forEach(chunk => {
+                            addMessage(chunk.text, false, chunk.movements);
+                        });
+                    }
+                } else {
+                    showError(data.error || 'Risposta non valida dal server');
+                }
+            } catch (error) {
+                removeLoadingIndicator();
+                showError(error.message);
+            } finally {
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        async function endChat() {
+            if (!chatId) {
+                messagesContainer.innerHTML = '';
+                chatIdDisplay.style.display = 'none';
+                return;
+            }
+
+            const apiUrl = apiUrlInput.value.trim();
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'end',
+                        chat_id: chatId
+                    })
+                });
+
+                if (response.ok) {
+                    chatId = null;
+                    messagesContainer.innerHTML = '';
+                    chatIdDisplay.style.display = 'none';
+                    addMessage('Chat terminata. Puoi iniziare una nuova conversazione.', false);
+                }
+            } catch (error) {
+                showError('Errore nella chiusura della chat: ' + error.message);
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        clearBtn.addEventListener('click', endChat);
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                sendMessage();
+            }
+        });
+
+        addMessage('Ciao! Sono NAO, il robot sociale della scuola Colamonico Chiarulli. Come posso aiutarti oggi?', false);
+    </script>
+</body>
+</html>
