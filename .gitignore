@@ -136,6 +136,12 @@ venv.bak/
 # PyPI configuration file
 .pypirc
 
+<<<<<<< HEAD
+=======
+#Project documentation
+DOCUM.md
+
+>>>>>>> c509aca (New: Added change personality by voice)
 # Cloud services
 .directory
 .debris/
