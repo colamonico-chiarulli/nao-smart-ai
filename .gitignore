@@ -132,3 +132,8 @@ venv.bak/
 
 #Project documentation
 CLAUDE.md
+
+# Cloud services
+.directory
+.debris/
+.megaignore
