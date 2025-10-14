@@ -11,8 +11,8 @@ Le diverse azioni sono specificate nel campo action del JSON inviato.
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
 -----
-Last Modified: 	November20th 2024 8:01:11 pm
-Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
+Last Modified: 	October 10th 2025, 19:00:00 pm
+Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -48,6 +48,7 @@ For full Additional Terms see the LICENSE file.
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from utils.gemini_chat_api import GeminiChatAPI
+from utils.stt import STT
 
 
 def create_app():
@@ -60,6 +61,14 @@ def create_app():
 
     # Crea l'istanza del gestore API
     chat_api = GeminiChatAPI()
+
+    # Inizializza sistema STT Vosk
+    stt = STT(logger=chat_api.logger)
+    
+    # Stampa messaggio di errore se Vosk non è disponibile
+    if not stt.is_available and stt.error_message:
+        print(stt.error_message)
+
 
     @app.route("/chat", methods=["POST"])
     def handle_chat():
@@ -105,6 +114,23 @@ def create_app():
             chat_api.logger.log_error(f"Errore nell'admin handling: {str(e)}")
             return jsonify({"error": str(e), "success": False}), 500
 
+
+    @app.route("/stt/vosk", methods=["POST"])
+    def speech_to_text_vosk():
+        """
+        Endpoint per Speech-to-Text con Vosk (offline)
+        Richiede un file audio WAV mono 16bit come 'audio' in multipart/form-data
+        """
+        return stt.handle_stt_request()
+    
+    @app.route("/stt/status", methods=["GET"])
+    def stt_status():
+        """
+        Endpoint per verificare lo stato del server e motore STT
+        """
+        return jsonify(stt.get_status()), 200
+
+
     return app
 
 
@@ -114,8 +140,8 @@ if __name__ == "__main__":
     ##############################
     # DEBUG
     ##############################
-    #app.run(host="127.0.0.1", port=3030, debug=True)
-
+    # NAO Local
+    # app.run(host="127.0.0.1", port=3030, debug=True)
     ##############################
     # PRODUCTION GUNICORN
     ##############################
