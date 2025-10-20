@@ -10,8 +10,8 @@ Le diverse azioni sono specificate nel campo action del JSON inviato.
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	October 14nd 2025 04:30:00 pm
-Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+Last Modified: 	November 11nd 2025 10:30:00 am
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -362,6 +362,9 @@ class GeminiChatAPI:
         # Lista di pattern supportati (tutti richiedono "comando di sistema" come prefisso)
         patterns = [
             r"comando\s+di\s+sistema\s+ora\s+sarai\s+(\w+)",                    # Originale
+            r"switch\s+t[ou]\s+(\w+)",                                          # switch to
+            r"abracadabra\s+diventa\s+(\w+)",                                   # abracadabra diventa
+            r"magia magia\s+diventa\s+(\w+)",                                   # magia magia diventa
             r"comando\s+di\s+sistema\s+diventa\s+(\w+)",                        # "diventa X"
             r"comando\s+di\s+sistema\s+comportati\s+(?:come|da)\s+(\w+)",       # "comportati come/da X"
             r"comando\s+di\s+sistema\s+cambia\s+personalit[aà]\s+(?:in|a)\s+(\w+)",  # "cambia personalità in/a X"

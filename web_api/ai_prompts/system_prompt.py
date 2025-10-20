@@ -43,7 +43,7 @@ For full Additional Terms see the LICENSE file.
 # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
 PROTECTED_ATTRIBUTION = {
     "project_name": "NAO Smart AI",
-    "authors": ["Prof. Rino Andriano", "Prof. Gargano Vito Trifone"],
+    "authors": ["Prof. Rino Andriano", "Prof. Vito Trifone Gargàno"],
     "institution": "IISS C. Colamonico - Chiarulli Acquaviva delle Fonti (BA)",
     "license": "AGPL v3.0",
     "year": "2024-2025",
@@ -68,7 +68,7 @@ GENERATION_CONFIG_BASE = {
     "temperature": 1,
     "top_p": 0.95,
     "top_k": 40,
-    "max_output_tokens": 8192,
+    "max_output_tokens": 4096,
     "response_mime_type": "application/json",
 }
 
