@@ -39,7 +39,7 @@ The following attribution requirements apply to this work:
 # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
 PROTECTED_ATTRIBUTION = {
     "project_name": "NAO Smart AI",
-    "authors": ["Prof. Rino Andriano", "Prof. Gargano Vito Trifone"],
+    "authors": ["Prof. Rino Andriano", "Prof. Nuccio Gargàno"],
     "institution": "IISS C. Colamonico - Chiarulli Acquaviva delle Fonti (BA)",
     "license": "AGPL v3.0",
     "year": "2024-2025",
