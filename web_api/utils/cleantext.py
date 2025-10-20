@@ -37,7 +37,6 @@ Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la puntegg
 """
 
 import re
-from unidecode import unidecode
 
 """
 "    Pulisce il testo rimuovendo emoji, caratteri speciali e normalizzando la punteggiatura.    
@@ -77,8 +76,8 @@ def clean_text(text):
     # Rimuove spazi extra
     text = text.strip()
 
-    # Converte in ascii e restuisce
-    return unidecode(text)
+    # Converte in ascii e restituisce
+    return text
 
 def clean_markdown(text):
     # Rimuove gli eventuali blocchi di codice Markdown e spazi bianchi extra

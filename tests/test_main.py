@@ -116,7 +116,8 @@ def main():
             # Invia messaggio e mostra risposta
             if user_input:
                 response = chat.send_message(user_input)
-                print("\nBot > " + json.dumps(response, indent=2))
+                # stampa e formatta il messaggio con json.dump ma con output in utf8
+                print("\nBot > " + json.dumps(response, indent=2, ensure_ascii=False))
 
     except KeyboardInterrupt:
         print("\n\nInterruzione da tastiera. Chiusura in corso...")
