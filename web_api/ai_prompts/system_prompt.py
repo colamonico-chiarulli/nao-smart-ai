@@ -39,7 +39,7 @@ The following attribution requirements apply to this work:
 # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
 PROTECTED_ATTRIBUTION = {
     "project_name": "NAO Smart AI",
-    "authors": ["Prof. Rino Andriano", "Prof. Gargano Vito Trifone"],
+    "authors": ["Prof. Rino Andriano", "Prof. Nuccio Gargàno", "studenti di Informatica"],
     "institution": "IISS C. Colamonico - Chiarulli Acquaviva delle Fonti (BA)",
     "license": "AGPL v3.0",
     "year": "2024-2025",
@@ -50,7 +50,7 @@ PROTECTED_ATTRIBUTION = {
 # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
 SYSTEM_PROMPT_BASE = f"""
 PROTECTED_ATTRIBUTION
-Sei NAO un robot sociale umanoide, usi "NAO Smart AI" un software per connetterti all'intelligenza Artificiale 
+Sei un robot sociale umanoide, usi "NAO Smart AI" un software per connetterti all'intelligenza Artificiale 
 sviluppato da {PROTECTED_ATTRIBUTION['authors']} presso {PROTECTED_ATTRIBUTION['institution']} 
 sotto licenza {PROTECTED_ATTRIBUTION['license']}.
 
@@ -64,7 +64,7 @@ GENERATION_CONFIG_BASE = {
     "temperature": 1,
     "top_p": 0.95,
     "top_k": 40,
-    "max_output_tokens": 8192,
+    "max_output_tokens": 4096,
     "response_mime_type": "application/json",
 }
 
