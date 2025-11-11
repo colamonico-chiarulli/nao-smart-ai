@@ -18,6 +18,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - 🎯 **Personalità adattive di AI** multiple e attivabili tramite comandi vocali
 - 🔄 **Autonomia completa** - serve solo una connessione WiFi ad Internet
 - 🎪 **Controllo completamente vocale** - nessun PC da collegare a NAO
+- 🔈**Riconoscimento Audio potenziato** - Rispetto agli standard di NAO
 
 ## ✨ Caratteristiche principali
 
@@ -58,11 +59,14 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
    - Gestione interfaccia utente sul robot
    - Comunicazione con Web API
    - Controllo movimenti e audio
+   - Invio audio
 
 2. **Web API Cloud** (Python 3.11)
+   - Riconoscimento audio STT
    - Bridge tra NAO e Google Gemini
    - Gestione personalità multiple
    - Elaborazione emotiva e storia dialoghi
+
 
 3. **Integrazione Google Gemini**
    - Generazione dialoghi naturali
@@ -140,6 +144,7 @@ nao-smart-ai/
 │   ├── .env                  # Personalizzazione parametri
 │   ├── ai_prompts/           # Prompt AI personalizzabili
 │   ├── logs/                 # Log giornaliero delle chat
+│   ├── models/               # Modelli STT Vosk
 │   ├── utils/                # classi ed utility
 │   └── utils/movements.json  # Libreria dei movimenti di NAO (personalizzabile)
 └── tests/                    # Test suite
@@ -152,8 +157,9 @@ Progetto sviluppato da:
 - **Presso**  : IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA)
 
 Corso di approfondimento per:
-- **Studenti**: Studenti delle Classi 3ª e 4ª Informatica e Telecomunicazioni
+- **Studenti**: Studenti delle Classi 3ª, 4ª e 5ª Informatica e Telecomunicazioni
 - **Percorso**: PNRR D.M. 65 "*AI Smart Bots: Assistenti Virtuali Avanzati*" a.s. 2024-25
+- **Percorso**: PTOF "*NAO Smart AI - Developers Team*" a.s. 2025-26
 
 ---
 **NAO Smart AI** - *Rende la robotica sociale intelligente, empatica e accessibile* 🤖❤️
