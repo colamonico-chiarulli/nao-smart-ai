@@ -39,7 +39,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - Log dei dialoghi per analisi e miglioramento prompt AI
 
 ### 🌐 Architettura Scalabile
-- **Web API cloud** sviluppata in Python 3.11
+- **Web API cloud** sviluppata in Python 3.13
 - Gestione simultanea di più robot NAO
 - Conservazione della cronologia dei dialoghi
 

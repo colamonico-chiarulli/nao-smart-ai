@@ -189,6 +189,32 @@ The following attribution requirements apply to this work:
             line-height: 1.5;
         }
 
+        /* Stile specifico per le Action */
+        .action-content {
+            background: #fff7ed !important;
+            color: #c2410c !important;
+            border: 2px solid #fdba74;
+            border-bottom-left-radius: 4px;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 12px rgba(251, 146, 60, 0.2);
+            position: relative;
+        }
+
+        .action-badge-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #c2410c;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
         .message.user .message-content {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -511,13 +537,12 @@ The following attribution requirements apply to this work:
         };
 
         function getEmojiForMovement(movement) {
-            // Cerca una corrispondenza nella mappa
             for (const [key, emoji] of Object.entries(movementEmojis)) {
                 if (movement.includes(key)) {
                     return emoji;
                 }
             }
-            return '🤖'; // emoji di default
+            return '🤖';
         }
 
         function updateStatus(connected) {
@@ -557,6 +582,35 @@ The following attribution requirements apply to this work:
                 });
                 contentDiv.appendChild(movementsDiv);
             }
+
+            const timestamp = document.createElement('div');
+            timestamp.className = 'message-timestamp';
+            timestamp.textContent = new Date().toLocaleTimeString('it-IT', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            contentDiv.appendChild(timestamp);
+
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Funzione dedicata per visualizzare l'ACTION
+        function addActionMessage(actionText) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content action-content';
+            
+            // Icona badge
+            const badge = document.createElement('div');
+            badge.className = 'action-badge-icon';
+            badge.textContent = '🎬';
+            contentDiv.appendChild(badge);
+
+            contentDiv.innerHTML += `<strong>AZIONE RILEVATA:</strong><br>${actionText}`;
 
             const timestamp = document.createElement('div');
             timestamp.className = 'message-timestamp';
@@ -653,10 +707,18 @@ The following attribution requirements apply to this work:
                     updateStatus(true);
                     updateChatId(data.chat_id);
                     
-                    if (data.response && data.response.chunks) {
-                        data.response.chunks.forEach(chunk => {
-                            addMessage(chunk.text, false, chunk.movements);
-                        });
+                    if (data.response) {
+                        // 1. Mostra i chunks di testo e movimenti
+                        if (data.response.chunks) {
+                            data.response.chunks.forEach(chunk => {
+                                addMessage(chunk.text, false, chunk.movements);
+                            });
+                        }
+
+                        // 2. Mostra l'azione se presente e diversa da NO_ACTION
+                        if (data.response.action && data.response.action !== "NO_ACTION") {
+                            addActionMessage(data.response.action);
+                        }
                     }
                 } else {
                     showError(data.error || 'Risposta non valida dal server');

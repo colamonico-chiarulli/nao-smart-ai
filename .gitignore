@@ -3,6 +3,8 @@ web_api/logs/chat*.txt
 web_api/ai_prompts/*_system.py
 !web_api/ai_prompts/example_system.py
 web_api/utils/movements.json
+web_api/utils/actions.json
+web_api/utils/actions_map.json
 
 # Models - Ignora tutto il contenuto
 web_api/models/*
@@ -129,9 +131,6 @@ venv.bak/
 
 # PyPI configuration file
 .pypirc
-
-#Project documentation
-CLAUDE.md
 
 # Cloud services
 .directory
