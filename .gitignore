@@ -10,10 +10,6 @@ web_api/utils/actions_map.json
 web_api/models/*
 !web_api/models/.gitkeep
 
-# Models - Ignora tutto il contenuto
-web_api/models/*
-!web_api/models/.gitkeep
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -136,12 +132,6 @@ venv.bak/
 # PyPI configuration file
 .pypirc
 
-<<<<<<< HEAD
-=======
-#Project documentation
-DOCUM.md
-
->>>>>>> c509aca (New: Added change personality by voice)
 # Cloud services
 .directory
 .debris/
