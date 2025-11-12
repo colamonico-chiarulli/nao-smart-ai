@@ -56,6 +56,7 @@ from google.genai import types
 from utils.cleantext import clean_text
 from utils.cleantext import clean_markdown
 from ai_prompts.system_prompt import SYSTEM_PROMPT_BASE
+from ai_prompts.technical_prompt import TECHNICAL_INSTRUCTIONS
 from ai_prompts.system_prompt import create_response_schema
 from ai_prompts.system_prompt import GENERATION_CONFIG_BASE
 from utils.chat_logger import ChatLogger
@@ -87,9 +88,15 @@ class GeminiChatAPI:
         
         self.client = genai.Client(api_key=api_key)
         
-        # Recupera i movimenti del robot dal file movements.json
+        # Recupera i movimenti e le azioni del robot dai file movements.json e actions.json
         movements_list = self._get_movements_from_file()
-        response_schema = create_response_schema(movements_list)
+        # Carica la Mappa Azioni ---
+        self.actions_map = self._get_actions_map_from_file()
+        # Estrae solo le CHIAVI (es. ACT_DANCE_MACARENA_FLOOR) per lo schema dell'AI
+        actions_keys_list = list(self.actions_map.keys())
+        
+        # Crea lo schema usando le chiavi
+        response_schema = create_response_schema(movements_list, actions_keys_list)
         
         # Configura le SYSTEM_INSTRUCTION 
         # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
@@ -104,7 +111,7 @@ class GeminiChatAPI:
 
         # Crea la configurazione di generazione (centralizzata)
         self.generation_config = self._create_generation_config(self.system_instruction)
-
+        
         # Dizionario per memorizzare le chat attive
         self.active_chats = {}
 
@@ -151,13 +158,34 @@ class GeminiChatAPI:
                 self.logger.log_warning("movements_library vuoto o non trovato")
                 
             return movements
-            
         except json.JSONDecodeError as e:
             self.logger.log_error(f"Errore nel parsing JSON di movements.json: {e}")
             return []
         except Exception as e:
             self.logger.log_error(f"Errore nel caricamento dei movements: {e}")
             return []
+        
+    def _get_actions_map_from_file(self):
+        """Legge la mappa delle azioni dal file actions_map.json"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            actions_path = os.path.join(current_dir, "actions_map.json")
+
+            if not os.path.exists(actions_path):
+                self.logger.log_error(f"File actions_map.json non trovato: {actions_path}")
+                return {}
+
+            with open(actions_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+                # Restituisce il dizionario completo { "ACT_...": "path/..." }
+                return data
+                
+        except json.JSONDecodeError as e:
+            self.logger.log_error(f"Errore nel parsing JSON di actions_map.json: {e}")
+            return {}
+        except Exception as e:
+            self.logger.log_error(f"Errore nel caricamento della actions map: {e}")
+            return {}
 
     def _load_ai_personality(self):
         """Carica la personalità del robot AI dal file .env"""
@@ -174,8 +202,10 @@ class GeminiChatAPI:
             if personality is None:
                 self.logger.log_warning(f"AI_PERSONALITY non trovata in '{config_file}'")
                 personality = ERROR_PERSONALITY
-                
-            return personality
+                    
+            # FUSIONE: Unisce la personalità base con le istruzioni tecniche
+            full_personality = personality + "\n" + TECHNICAL_INSTRUCTIONS
+            return full_personality
             
         except ImportError as e:
             self.logger.log_error(f"File di configurazione '{config_file}' non trovato: {e}")
@@ -228,8 +258,9 @@ class GeminiChatAPI:
             if personality is None:
                 self.logger.log_warning(f"AI_PERSONALITY non trovata in '{module_name}'")
                 return ERROR_PERSONALITY
-
-            return personality
+            
+            # FUSIONE: Unisce la personalità specifica con le istruzioni tecniche
+            return personality + "\n" + TECHNICAL_INSTRUCTIONS
 
         except ImportError as e:
             self.logger.log_error(f"Modulo personalità '{module_name}' non trovato: {e}")
@@ -254,19 +285,19 @@ class GeminiChatAPI:
         return [
             types.SafetySetting(
                 category="HARM_CATEGORY_HATE_SPEECH",
-                threshold="BLOCK_ONLY_HIGH"
+                threshold="BLOCK_MEDIUM_AND_ABOVE"
             ),
             types.SafetySetting(
                 category="HARM_CATEGORY_HARASSMENT",
-                threshold="BLOCK_ONLY_HIGH"
+                threshold="BLOCK_MEDIUM_AND_ABOVE"
             ),
             types.SafetySetting(
                 category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                threshold="BLOCK_ONLY_HIGH"
+                threshold="BLOCK_MEDIUM_AND_ABOVE"
             ),
             types.SafetySetting(
                 category="HARM_CATEGORY_DANGEROUS_CONTENT",
-                threshold="BLOCK_ONLY_HIGH"
+                threshold="BLOCK_MEDIUM_AND_ABOVE"
             ),
         ]
 
@@ -315,6 +346,18 @@ class GeminiChatAPI:
             #self.logger.log_info(f"Debug JSON: {response_data}")
             chunks = response_data.get("chunks", [])
             
+            # --- TRADUZIONE AZIONE ---
+            raw_action_key = response_data.get("action") 
+            final_action_path = ""
+
+            # Se la chiave esiste ed è diversa da NO_ACTION
+            if raw_action_key and raw_action_key != "NO_ACTION":
+                if raw_action_key in self.actions_map:
+                    final_action_path = self.actions_map[raw_action_key]
+                    self.logger.log_info(f"Azione mappata: {raw_action_key} -> {final_action_path}")
+                else:
+                    self.logger.log_warning(f"Chiave sconosciuta: {raw_action_key}")
+            
             if not chunks:
                 self.logger.log_warning("Risposta del modello senza chunks")
             
@@ -326,7 +369,12 @@ class GeminiChatAPI:
                 chunk["text"] = cleaned_response
                 chunk["movements"] = [fix_animation(mov) for mov in chunk.get("movements", [])]
             
-            return True, {"chunks": chunks}
+            # Costruisce il risultato finale includendo l'azione se esiste
+            result = {"chunks": chunks}
+            if final_action_path:
+                result["action"] = final_action_path
+
+            return True, result
      
         except json.JSONDecodeError as e:
             self.logger.log_error(f"Errore nel parsing JSON della risposta: {str(e)}")
@@ -523,7 +571,7 @@ class GeminiChatAPI:
 
             # Usa la configurazione personalizzata per questa chat (se presente)
             chat_config = self._get_generation_config_for_chat(chat_id)
-
+            
             # Invia il messaggio usando la configurazione (personalizzata o default)
             response = self.client.models.generate_content(
                 model=self.gemini_model,
