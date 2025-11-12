@@ -5,8 +5,8 @@ File:	/nao-client/nao-smart-ai-client.py
 @copyright	(c)2025 Nuccio Gargano
 Created Date: Friday, October 10th 2025, 18:30:00 pm
 -----
-Last Modified: 	October 10th 2025, 19:00:00 pm
-Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+Last Modified: 	November 12th 2025, 05:00:00 pm
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -35,6 +35,10 @@ The following attribution requirements apply to this work:
 ------------------------------------------------------------------------------
 """
 
+import time
+import threading
+import struct
+import audioop
 class MyClass(GeneratedClass):
     def __init__(self):
         GeneratedClass.__init__(self)
@@ -42,6 +46,16 @@ class MyClass(GeneratedClass):
         self.audio_recorder = None
         self.is_recording = False
         self.audio_file_path = "/tmp/temp_audio.wav"
+        # Per registrare tutti i microfoni NAO occorre usare 48 kHz
+        # (cfr. doc 2.8: http://doc.aldebaran.com/2-8/naoqi/audio/alaudiorecorder-api.html)
+        self.record_sample_rate = 48000
+        self.target_sample_rate = 16000
+        self.target_channels = 1
+        self.channel_mask = [1, 1, 1, 1]
+        self.post_silence_seconds = 0.8
+        self.listen_off_time = None
+        self.last_speech_time = None
+        self.stop_lock = threading.Lock()
 
         self.api_url = self.getParameter("api_url")
         if not self.api_url or self.api_url.strip() == "":
@@ -49,7 +63,7 @@ class MyClass(GeneratedClass):
 
         self.recording_start_time = None
         self.speech_detected_time = None
-        self.prebuffer_seconds = 0.8  
+        self.prebuffer_seconds = 0.8
 
     def onLoad(self):
         """Inizializzazione del box"""
@@ -73,7 +87,7 @@ class MyClass(GeneratedClass):
                 try:
                     self.audio_recorder.stopMicrophonesRecording()
                 except:
-                    pass 
+                    pass
             self.is_recording = False
         except Exception as e:
             self.logger.error("Errore in onUnload: " + str(e))
@@ -102,10 +116,10 @@ class MyClass(GeneratedClass):
             self.mark_speech_detected()
 
         elif value == "ListenOff":
-            self.stop_recording()
+            self.listen_off_time = time.time()
 
         elif value == "EndOfProcess":
-            self.trim_by_timing_and_send()
+            self.handle_end_of_process()
 
     def start_recording(self):
         """Inizia registrazione e segna il tempo di inizio"""
@@ -118,16 +132,18 @@ class MyClass(GeneratedClass):
                     pass
                 self.is_recording = False
 
-            # Resetta i tempi
+            # Resetta i tempi di riferimento
             self.recording_start_time = time.time()
             self.speech_detected_time = None
+            self.last_speech_time = None
+            self.listen_off_time = None
 
             # Avvia registrazione
             self.audio_recorder.startMicrophonesRecording(
                 self.audio_file_path,
                 "wav",
-                16000,
-                [0, 0, 1, 0]
+                self.record_sample_rate,
+                self.channel_mask
             )
             self.is_recording = True
         except Exception as e:
@@ -138,20 +154,48 @@ class MyClass(GeneratedClass):
         """Segna il momento in cui viene rilevato il parlato"""
         if self.is_recording and self.speech_detected_time is None:
             self.speech_detected_time = time.time()
-            elapsed = self.speech_detected_time - self.recording_start_time
+        if self.is_recording:
+            self.last_speech_time = time.time()
 
     def stop_recording(self):
         """Ferma la registrazione audio"""
-        if self.is_recording:
+        with self.stop_lock:
+            if not self.is_recording:
+                return
             try:
-                recording_end_time = time.time()
-                total_duration = recording_end_time - self.recording_start_time
-
                 self.audio_recorder.stopMicrophonesRecording()
-                self.is_recording = False
-
             except Exception as e:
                 self.logger.error("Errore stop registrazione: " + str(e))
+            finally:Rino Andriano <andriano@colamonicochiarulli.edu.it>
+                self.is_recording = False
+                self.listen_off_time = None
+
+    def handle_end_of_process(self):
+        """Gestisce la chiusura applicando un buffer di silenzio"""
+        try:
+            if self.is_recording:
+                wait_seconds = 0.0
+                now = time.time()
+
+                if self.last_speech_time:
+                    elapsed = now - self.last_speech_time
+                    if elapsed < self.post_silence_seconds:
+                        wait_seconds = self.post_silence_seconds - elapsed
+                elif self.listen_off_time:
+                    elapsed = now - self.listen_off_time
+                    if elapsed < self.post_silence_seconds:
+                        wait_seconds = self.post_silence_seconds - elapsed
+
+                if wait_seconds > 0:
+                    time.sleep(wait_seconds)
+
+                self.stop_recording()
+
+            self.trim_by_timing_and_send()
+
+        except Exception as e:
+            self.logger.error("Errore handle_end_of_process: " + str(e))
+            self.onTranscriptionFailed()
 
     def trim_by_timing_and_send(self):
         """Taglia il silenzio iniziale basandosi sui timestamp"""
@@ -191,46 +235,155 @@ class MyClass(GeneratedClass):
         """Taglia l'audio dal secondo start_seconds in poi"""
         try:
             import wave
-            import array
             import os
 
             wf = wave.open(audio_path, 'rb')
             params = wf.getparams()
+            n_channels = wf.getnchannels()
+            sample_width = wf.getsampwidth()
             sample_rate = wf.getframerate()
-            frames = wf.readframes(wf.getnframes())
+            n_frames = wf.getnframes()
+            frames = wf.readframes(n_frames)
             wf.close()
 
-            audio_data = array.array('h', frames)
-            original_samples = len(audio_data)
-            original_duration = float(original_samples) / sample_rate
+            frame_size = max(1, n_channels * sample_width)
+            start_frame = int(max(0.0, start_seconds) * sample_rate)
 
-            start_sample = int(start_seconds * sample_rate)
-
-            if start_sample >= original_samples:
+            if start_frame >= n_frames:
                 self.logger.warning("Punto di taglio oltre la fine del file")
                 return False
 
-            if start_sample < 100:
+            start_byte = start_frame * frame_size
+            if start_frame < 100 or start_byte <= 0:
                 self.logger.info("Taglio troppo piccolo, mantengo tutto")
-                return True
+                trimmed_bytes = frames
+            else:
+                trimmed_bytes = frames[start_byte:]
 
+            processed_bytes, out_channels, out_sample_width, out_rate = self.prepare_audio_for_stt(
+                trimmed_bytes,
+                sample_width,
+                n_channels,
+                sample_rate
+            )
 
-            trimmed_data = audio_data[start_sample:]
-            trimmed_samples = len(trimmed_data)
-            trimmed_duration = float(trimmed_samples) / sample_rate
+            if processed_bytes is None:
+                self.logger.warning("Conversione audio fallita, mantengo originale")
+                processed_bytes = trimmed_bytes
+                out_channels = n_channels
+                out_sample_width = sample_width
+                out_rate = sample_rate
 
             wf_out = wave.open(audio_path, 'wb')
-            wf_out.setparams(params)
-            wf_out.writeframes(trimmed_data.tostring())
+            out_frame_count = len(processed_bytes) // max(1, out_channels * out_sample_width)
+            wf_out.setparams((out_channels, out_sample_width, out_rate, out_frame_count, params[4], params[5]))
+            wf_out.writeframes(processed_bytes)
             wf_out.close()
-
-            reduction_percent = int((1.0 - float(trimmed_samples) / original_samples) * 100)
 
             return True
 
         except Exception as e:
             self.logger.error("Errore trim_audio_by_time: " + str(e))
             return False
+
+    def prepare_audio_for_stt(self, audio_bytes, sample_width, in_channels, sample_rate):
+        """Converte l'audio in mono 16 kHz per l'STT esterno"""
+        try:
+            processed = audio_bytes
+            out_channels = in_channels
+            out_sample_width = sample_width
+            out_rate = sample_rate
+
+            if in_channels > self.target_channels:
+                processed = self.downmix_to_mono(processed, sample_width, in_channels)
+                out_channels = self.target_channels
+
+            if out_channels != self.target_channels:
+                processed = self.downmix_to_mono(processed, sample_width, out_channels)
+                out_channels = self.target_channels
+
+            if out_rate != self.target_sample_rate:
+                processed, _ = audioop.ratecv(
+                    processed,
+                    out_sample_width,
+                    out_channels,
+                    out_rate,
+                    self.target_sample_rate,
+                    None
+                )
+                out_rate = self.target_sample_rate
+
+            return processed, out_channels, out_sample_width, out_rate
+
+        except Exception as e:
+            self.logger.error("Errore preparazione audio STT: " + str(e))
+            return None, in_channels, sample_width, sample_rate
+
+    def ensure_audio_target_format(self, audio_path):
+        """Garantisce che il file sia mono 16 kHz prima dell'invio"""
+        try:
+            import wave
+
+            wf = wave.open(audio_path, 'rb')
+            params = wf.getparams()
+            n_channels = wf.getnchannels()
+            sample_width = wf.getsampwidth()
+            sample_rate = wf.getframerate()
+            n_frames = wf.getnframes()
+            frames = wf.readframes(n_frames)
+            wf.close()
+
+            if n_channels == self.target_channels and sample_rate == self.target_sample_rate:
+                return True
+
+            processed_bytes, out_channels, out_sample_width, out_rate = self.prepare_audio_for_stt(
+                frames,
+                sample_width,
+                n_channels,
+                sample_rate
+            )
+
+            if processed_bytes is None:
+                return False
+
+            wf_out = wave.open(audio_path, 'wb')
+            out_frame_count = len(processed_bytes) // max(1, out_channels * out_sample_width)
+            wf_out.setparams((out_channels, out_sample_width, out_rate, out_frame_count, params[4], params[5]))
+            wf_out.writeframes(processed_bytes)
+            wf_out.close()
+
+            return True
+
+        except Exception as e:
+            self.logger.error("Errore conversione formato audio: " + str(e))
+            return False
+
+    def downmix_to_mono(self, audio_bytes, sample_width, in_channels):
+        """Riduce n canali a mono mediante media aritmetica"""
+        if in_channels <= 1:
+            return audio_bytes
+
+        if sample_width != 2:
+            self.logger.warning("Downmix supportato solo per 16 bit, trovato " + str(sample_width))
+            return audio_bytes
+
+        import array
+
+        frame_size = in_channels * sample_width
+        sample_count = len(audio_bytes) // frame_size
+        mono_array = array.array('h')
+        unpack_fmt = "<" + ("h" * in_channels)
+
+        for offset in range(0, sample_count * frame_size, frame_size):
+            frame = struct.unpack_from(unpack_fmt, audio_bytes, offset)
+            averaged = int(round(sum(frame) / float(in_channels)))
+            if averaged > 32767:
+                averaged = 32767
+            elif averaged < -32768:
+                averaged = -32768
+            mono_array.append(averaged)
+
+        return mono_array.tostring()
 
     def send_audio_to_stt(self):
         """Invia l'audio al server STT esterno e recupera la trascrizione"""
@@ -239,6 +392,11 @@ class MyClass(GeneratedClass):
 
             if not os.path.exists(self.audio_file_path):
                 self.logger.error("File audio non trovato")
+                self.onTranscriptionFailed()
+                return
+
+            if not self.ensure_audio_target_format(self.audio_file_path):
+                self.logger.warning("Formato audio non convertito correttamente")
                 self.onTranscriptionFailed()
                 return
 
@@ -251,7 +409,7 @@ class MyClass(GeneratedClass):
             self.logger.info("Invio audio al server STT: " + str(file_size) + " bytes")
 
             try:
-                import requests as req_module 
+                import requests as req_module
 
                 # Leggi file audio
                 with open(self.audio_file_path, 'rb') as audio_file:
