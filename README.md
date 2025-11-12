@@ -18,7 +18,9 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - 🎯 **Personalità adattive di AI** multiple e attivabili tramite comandi vocali
 - 🔄 **Autonomia completa** - serve solo una connessione WiFi ad Internet
 - 🎪 **Controllo completamente vocale** - nessun PC da collegare a NAO
-- 🔈**Riconoscimento Audio potenziato** - Rispetto agli standard di NAO
+- 🔈**Riconoscimento Audio potenziato** - Con nuovo STT su server 
+- 🎬 **Animazioni personalizzate con AI** - Possibilita per AI di scegliere in base al dialogo 
+di avviare "un'azione" (ballare, suonare, ecc) da una libreria predefinita
 
 ## ✨ Caratteristiche principali
 
@@ -39,7 +41,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - Log dei dialoghi per analisi e miglioramento prompt AI
 
 ### 🌐 Architettura Scalabile
-- **Web API cloud** sviluppata in Python 3.11
+- **Web API cloud** sviluppata in Python 3.13
 - Gestione simultanea di più robot NAO
 - Conservazione della cronologia dei dialoghi
 
@@ -149,7 +151,9 @@ nao-smart-ai/
 │   ├── logs/                 # Log giornaliero delle chat
 │   ├── models/               # Modelli STT Vosk
 │   ├── utils/                # classi ed utility
-│   └── utils/movements.json  # Libreria dei movimenti di NAO (personalizzabile)
+│   ├── utils/movements.json  # Libreria dei movimenti di NAO (personalizzabile)
+│   ├── utils/actions.json    # Libreria delle animazioni personalizzate (actions) per NAO (personalizzabile)
+│   └── utils/actions_map.json# Mappatura actions con "constrained completions" (personalizzabile)
 ├── nao-client/               # Client NAO (Python 2.7)
 └── tests/                    # Test suite
 ```

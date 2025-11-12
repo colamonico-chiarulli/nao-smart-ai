@@ -97,6 +97,15 @@ class MyClass(GeneratedClass):
                 time.sleep(0.5) #pausa 0.5 secondi
 
             self.posture.goToPosture("Stand", 1.0)
+            
+            if response['action']:
+                action=response['action']
+                try:
+                    # Riproduzione dell'animazione
+                    self.animPlayer.run(str(action))
+                except Exception as e:
+                    self.logger.error("Errore nell'esecuzione dell'azione" + str(e))
+                
 
     '''
     '' Invia un messaggio al servizio di chat e ritorna la risposta

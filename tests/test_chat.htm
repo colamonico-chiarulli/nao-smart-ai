@@ -7,8 +7,8 @@ Web client Test API - NAO-Smart-AI API
 @copyright	(c)2025 Nuccio Gargano
 Created Date: Friday, October 10th 2025, 18:30:00 pm
 -----
-Last Modified: 	October 10th 2025, 19:00:00 pm
-Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+Last Modified: 	December 2nd 2025 11:30:00 am
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -187,6 +187,31 @@ The following attribution requirements apply to this work:
             border-radius: 18px;
             font-size: 15px;
             line-height: 1.5;
+        }
+
+        .action-content {
+            background: #fff7ed !important;
+            color: #c2410c !important;
+            border: 2px solid #fdba74;
+            border-bottom-left-radius: 4px;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 12px rgba(251, 146, 60, 0.2);
+            position: relative;
+        }
+
+        .action-badge-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #c2410c;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
         }
 
         .message.user .message-content {
@@ -375,10 +400,10 @@ The following attribution requirements apply to this work:
 
         <div class="input-container">
             <div class="input-wrapper">
-                <input 
-                    type="text" 
-                    id="messageInput" 
-                    placeholder="Scrivi un messaggio a NAO..." 
+                <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Scrivi un messaggio a NAO..."
                     autocomplete="off"
                 >
                 <button class="btn btn-send" id="sendBtn">
@@ -403,121 +428,137 @@ The following attribution requirements apply to this work:
         const chatIdDisplay = document.getElementById('chatIdDisplay');
         const chatIdValue = document.getElementById('chatIdValue');
 
-        // Mappa delle emoticon per i movimenti
+        // Mappa delle emoticon AGGIORNATA basata sui movimenti reali disponibili
         const movementEmojis = {
-            'BodyTalk': '💬',
-            'Thinking': '🤔',
-            'Angry': '😠',
-            'Anxious': '😰',
-            'Bored': '😑',
-            'Disappointed': '😞',
-            'Exhausted': '😫',
-            'Fear': '😨',
-            'Fearful': '😱',
-            'Frustrated': '😤',
-            'Humiliated': '😳',
-            'Hurt': '😢',
-            'Late': '⏰',
-            'Sad': '😢',
-            'Shocked': '😲',
-            'Sorry': '🙏',
-            'Surprise': '😮',
-            'Alienated': '🤷',
-            'Annoyed': '😒',
-            'AskForAttention': '👋',
-            'Cautious': '🤨',
-            'Confused': '😕',
-            'Determined': '😤',
-            'Embarrassed': '😅',
-            'Hello': '👋',
-            'Hesitation': '😬',
-            'Innocent': '😇',
-            'Lonely': '😔',
-            'Mischievous': '😏',
-            'Puzzled': '🤔',
-            'Sneeze': '🤧',
-            'Stubborn': '😠',
-            'Suspicious': '🤨',
-            'Amused': '😄',
-            'Confident': '😎',
-            'Ecstatic': '🤩',
-            'Enthusiastic': '🤗',
-            'Excited': '😃',
-            'Happy': '😊',
-            'Hungry': '🍕',
-            'Hysterical': '😂',
-            'Interested': '🧐',
-            'Laugh': '😄',
-            'Mocker': '😏',
-            'Optimistic': '😊',
-            'Peaceful': '😌',
-            'Proud': '😌',
-            'Relieved': '😅',
-            'Shy': '😊',
-            'Sure': '👍',
-            'Winner': '🏆',
-            'Applause': '👏',
-            'Bow': '🙇',
-            'But': '☝️',
-            'CalmDown': '🤚',
-            'Caress': '🤗',
-            'CatchFly': '🦟',
-            'Choice': '🤷',
-            'Claw': '✊',
-            'Coaxing': '🤝',
-            'ComeOn': '👍',
-            'Count': '🔢',
-            'Desperate': '😩',
-            'Everything': '🌍',
-            'Explain': '👨‍🏫',
-            'Far': '👉',
-            'Follow': '🚶',
-            'Freeze': '🧊',
-            'Give': '🎁',
-            'Great': '👍',
-            'HeSays': '💬',
-            'Hey': '👋',
-            'Hide': '🙈',
-            'IDontKnow': '🤷',
-            'JointHands': '🙏',
-            'Joy': '😄',
-            'Kisses': '😘',
-            'Look': '👀',
-            'Maybe': '🤔',
-            'Me': '👤',
-            'Mime': '🎭',
-            'Next': '➡️',
-            'No': '❌',
-            'Nothing': '🚫',
-            'OnTheEvening': '🌙',
-            'Please': '🙏',
-            'Reject': '🙅',
-            'Salute': '👋',
-            'Shoot': '🎯',
-            'ShowFloor': '⬇️',
-            'ShowSky': '⬆️',
-            'Stretch': '🤸',
-            'Surprised': '😮',
-            'Take': '🤲',
-            'This': '👈',
-            'WhatSThis': '❓',
-            'Wings': '🦅',
-            'Yes': '✅',
-            'You': '👉',
-            'YouKnowWhat': '💡',
-            'Yum': '😋',
-            'Speaking': '🗣️',
-            'Remember': '💭'
+            // BodyTalk
+            'BodyTalk/Speaking': '💬',
+            'BodyTalk/Thinking/Remember': '💭',
+            
+            // Emotions/Negative
+            'Emotions/Negative/Angry': '😠',
+            'Emotions/Negative/Anxious': '😰',
+            'Emotions/Negative/Bored': '😑',
+            'Emotions/Negative/Disappointed': '😞',
+            'Emotions/Negative/Exhausted': '😫',
+            'Emotions/Negative/Fear': '😨',
+            'Emotions/Negative/Fearful': '😱',
+            'Emotions/Negative/Frustrated': '😤',
+            'Emotions/Negative/Humiliated': '😳',
+            'Emotions/Negative/Hurt': '😢',
+            'Emotions/Negative/Late': '⏰',
+            'Emotions/Negative/Sad': '😢',
+            'Emotions/Negative/Shocked': '😲',
+            'Emotions/Negative/Sorry': '🙏',
+            'Emotions/Negative/Surprise': '😮',
+            
+            // Emotions/Neutral
+            'Emotions/Neutral/Alienated': '🤷',
+            'Emotions/Neutral/Annoyed': '😒',
+            'Emotions/Neutral/AskForAttention': '👋',
+            'Emotions/Neutral/Cautious': '🤨',
+            'Emotions/Neutral/Confused': '😕',
+            'Emotions/Neutral/Determined': '😤',
+            'Emotions/Neutral/Embarrassed': '😅',
+            'Emotions/Neutral/Hello': '👋',
+            'Emotions/Neutral/Hesitation': '😬',
+            'Emotions/Neutral/Innocent': '😇',
+            'Emotions/Neutral/Lonely': '😔',
+            'Emotions/Neutral/Mischievous': '😏',
+            'Emotions/Neutral/Puzzled': '🤔',
+            'Emotions/Neutral/Sneeze': '🤧',
+            'Emotions/Neutral/Stubborn': '😠',
+            'Emotions/Neutral/Suspicious': '🤨',
+            
+            // Emotions/Positive
+            'Emotions/Positive/Amused': '😄',
+            'Emotions/Positive/Confident': '😎',
+            'Emotions/Positive/Ecstatic': '🤩',
+            'Emotions/Positive/Enthusiastic': '🤗',
+            'Emotions/Positive/Excited': '😃',
+            'Emotions/Positive/Happy': '😊',
+            'Emotions/Positive/Hungry': '🍕',
+            'Emotions/Positive/Hysterical': '😂',
+            'Emotions/Positive/Interested': '🧐',
+            'Emotions/Positive/Laugh': '😄',
+            'Emotions/Positive/Mocker': '😏',
+            'Emotions/Positive/Optimistic': '😊',
+            'Emotions/Positive/Peaceful': '😌',
+            'Emotions/Positive/Proud': '😌',
+            'Emotions/Positive/Relieved': '😅',
+            'Emotions/Positive/Shy': '😊',
+            'Emotions/Positive/Sure': '👍',
+            'Emotions/Positive/Winner': '🏆',
+            
+            // Gestures
+            'Gestures/Applause': '👏',
+            'Gestures/BowShort': '🙇',
+            'Gestures/But': '☝️',
+            'Gestures/CalmDown': '🤚',
+            'Gestures/Caress': '🤗',
+            'Gestures/CatchFly': '🦟',
+            'Gestures/Choice': '🤷',
+            'Gestures/Claw': '✊',
+            'Gestures/Coaxing': '🤝',
+            'Gestures/ComeOn': '👍',
+            'Gestures/CountFive': '5️⃣',
+            'Gestures/CountFour': '4️⃣',
+            'Gestures/CountMore': '🔢',
+            'Gestures/CountOne': '1️⃣',
+            'Gestures/CountThree': '3️⃣',
+            'Gestures/CountTwo': '2️⃣',
+            'Gestures/Desperate': '😩',
+            'Gestures/Enthusiastic': '🙌',
+            'Gestures/Everything': '🌍',
+            'Gestures/Explain': '👨‍🏫',
+            'Gestures/Far': '👉',
+            'Gestures/Follow': '🚶',
+            'Gestures/Freeze': '🧊',
+            'Gestures/Give': '🎁',
+            'Gestures/Great': '👍',
+            'Gestures/HeSays': '💬',
+            'Gestures/Hey': '👋',
+            'Gestures/Hide': '🙈',
+            'Gestures/Hungry': '🍕',
+            'Gestures/IDontKnow': '🤷',
+            'Gestures/JointHands': '🙏',
+            'Gestures/Joy': '😄',
+            'Gestures/Kisses': '😘',
+            'Gestures/Look': '👀',
+            'Gestures/Maybe': '🤔',
+            'Gestures/Me': '👤',
+            'Gestures/Mime': '🎭',
+            'Gestures/Next': '➡️',
+            'Gestures/No': '❌',
+            'Gestures/Nothing': '🚫',
+            'Gestures/OnTheEvening': '🌙',
+            'Gestures/Please': '🙏',
+            'Gestures/Reject': '🙅',
+            'Gestures/Salute': '👋',
+            'Gestures/Shoot': '🎯',
+            'Gestures/ShowFloor': '⬇️',
+            'Gestures/ShowSky': '⬆️',
+            'Gestures/Shy': '😊',
+            'Gestures/Stretch': '🤸',
+            'Gestures/Surprised': '😮',
+            'Gestures/Take': '🤲',
+            'Gestures/Thinking': '🤔',
+            'Gestures/This': '👈',
+            'Gestures/WhatSThis': '❓',
+            'Gestures/Wings': '🦅',
+            'Gestures/Yes': '✅',
+            'Gestures/You': '👉',
+            'Gestures/YouKnowWhat': '💡',
+            'Gestures/Yum': '😋'
         };
 
         function getEmojiForMovement(movement) {
-            // Cerca una corrispondenza nella mappa
+            // Cerca corrispondenza esatta o parziale
             for (const [key, emoji] of Object.entries(movementEmojis)) {
                 if (movement.includes(key)) {
                     return emoji;
                 }
             }
-            return '🤖'; // emoji di default
+            return '🤖';
         }
 
         function updateStatus(connected) {
@@ -541,7 +582,7 @@ The following attribution requirements apply to this work:
         function addMessage(text, isUser, movements = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
-            
+
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
             contentDiv.textContent = text;
@@ -552,7 +593,9 @@ The following attribution requirements apply to this work:
                 movements.forEach(mov => {
                     const tag = document.createElement('span');
                     tag.className = 'movements-tag';
-                    tag.textContent = mov.replace('animations/Stand/', '');
+                    const emoji = getEmojiForMovement(mov);
+                    const cleanName = mov.replace('animations/Stand/', '');
+                    tag.textContent = `${emoji} ${cleanName}`;
                     movementsDiv.appendChild(tag);
                 });
                 contentDiv.appendChild(movementsDiv);
@@ -560,9 +603,36 @@ The following attribution requirements apply to this work:
 
             const timestamp = document.createElement('div');
             timestamp.className = 'message-timestamp';
-            timestamp.textContent = new Date().toLocaleTimeString('it-IT', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+            timestamp.textContent = new Date().toLocaleTimeString('it-IT', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            contentDiv.appendChild(timestamp);
+
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addActionMessage(actionText) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content action-content';
+
+            const badge = document.createElement('div');
+            badge.className = 'action-badge-icon';
+            badge.textContent = '🎬';
+            contentDiv.appendChild(badge);
+
+            contentDiv.innerHTML += `<strong>AZIONE RILEVATA:</strong><br>${actionText}`;
+
+            const timestamp = document.createElement('div');
+            timestamp.className = 'message-timestamp';
+            timestamp.textContent = new Date().toLocaleTimeString('it-IT', {
+                hour: '2-digit',
+                minute: '2-digit'
             });
             contentDiv.appendChild(timestamp);
 
@@ -575,16 +645,16 @@ The following attribution requirements apply to this work:
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'message bot';
             loadingDiv.id = 'loadingIndicator';
-            
+
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content loading';
-            
+
             for (let i = 0; i < 3; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'loading-dot';
                 contentDiv.appendChild(dot);
             }
-            
+
             loadingDiv.appendChild(contentDiv);
             messagesContainer.appendChild(loadingDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -603,7 +673,7 @@ The following attribution requirements apply to this work:
             errorDiv.textContent = `❌ Errore: ${message}`;
             messagesContainer.appendChild(errorDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
+
             setTimeout(() => errorDiv.remove(), 5000);
             updateStatus(false);
         }
@@ -648,15 +718,21 @@ The following attribution requirements apply to this work:
                 }
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     updateStatus(true);
                     updateChatId(data.chat_id);
-                    
-                    if (data.response && data.response.chunks) {
-                        data.response.chunks.forEach(chunk => {
-                            addMessage(chunk.text, false, chunk.movements);
-                        });
+
+                    if (data.response) {
+                        if (data.response.chunks) {
+                            data.response.chunks.forEach(chunk => {
+                                addMessage(chunk.text, false, chunk.movements);
+                            });
+                        }
+
+                        if (data.response.action && data.response.action !== "NO_ACTION") {
+                            addActionMessage(data.response.action);
+                        }
                     }
                 } else {
                     showError(data.error || 'Risposta non valida dal server');
@@ -678,7 +754,7 @@ The following attribution requirements apply to this work:
             }
 
             const apiUrl = apiUrlInput.value.trim();
-            
+
             try {
                 const response = await fetch(apiUrl, {
                     method: 'POST',
