@@ -1,0 +1,9 @@
+{
+    "ACT_ACTOR_CALL_SOMEONE": "actor/Call_Someone",
+    "ACT_ACTOR_DRIVE_CAR": "actor/DriveCar",
+    "ACT_ANIMALS_ELEPHANT": "animals/Elephant",
+    "ACT_ANIMALS_GORILLA": "animals/Gorilla",
+    "ACT_ANIMALS_MOUSE": "animals/Mouse",
+    "ACT_DANCES_FUNNY_DANCER": "dances/FunnyDancer",
+    "ACT_FITNESS_PUSH_UP": "fitness/PushUp"
+}

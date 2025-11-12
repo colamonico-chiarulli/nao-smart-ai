@@ -18,7 +18,9 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - 🎯 **Personalità adattive di AI** multiple e attivabili tramite comandi vocali
 - 🔄 **Autonomia completa** - serve solo una connessione WiFi ad Internet
 - 🎪 **Controllo completamente vocale** - nessun PC da collegare a NAO
-- 🔈**Riconoscimento Audio potenziato** - Rispetto agli standard di NAO
+- 🔈**Riconoscimento Audio potenziato** - Con nuovo STT su server 
+- 🎬 **Animazioni personalizzate con AI** - Possibilita per AI di scegliere in base al dialogo 
+di avviare "un'azione" (ballare, suonare, ecc) da una libreria predefinita
 
 ## ✨ Caratteristiche principali
 
@@ -39,7 +41,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - Log dei dialoghi per analisi e miglioramento prompt AI
 
 ### 🌐 Architettura Scalabile
-- **Web API cloud** sviluppata in Python 3.11
+- **Web API cloud** sviluppata in Python 3.13
 - Gestione simultanea di più robot NAO
 - Conservazione della cronologia dei dialoghi
 
@@ -146,7 +148,9 @@ nao-smart-ai/
 │   ├── logs/                 # Log giornaliero delle chat
 │   ├── models/               # Modelli STT Vosk
 │   ├── utils/                # classi ed utility
-│   └── utils/movements.json  # Libreria dei movimenti di NAO (personalizzabile)
+│   ├── utils/movements.json  # Libreria dei movimenti di NAO (personalizzabile)
+│   ├── utils/actions.json    # Libreria delle animazioni personalizzate (actions) per NAO (personalizzabile)
+│   └── utils/actions_map.json# Mappatura actions con "constrained completions" (personalizzabile)
 └── tests/                    # Test suite
 ```
 
@@ -160,6 +164,17 @@ Iniziative Didattiche (progettazione, manutenzione e sviluppo)
 - **Studenti**: Studenti delle Classi 3ª, 4ª e 5ª Informatica e Telecomunicazioni
 - **Percorso**: PNRR D.M. 65 "*AI Smart Bots: Assistenti Virtuali Avanzati*" a.s. 2024-25
 - **Percorso**: PTOF "*NAO Smart AI - Developers Team*" a.s. 2025-26
+
+---
+> ## 🏆 Riconoscimenti e Premi
+
+ - il 14 novembre 2025 - **NAO Smart AI** è stato premiato, classificandosi al **primo posto** del concorso nazionale [**Premio Imprendi - Innovation Champions 2025**](https://www.imprendi.org/premi/#premio-imprendi-innovazione) della Fondazione Imprendi di Padova
+---
+
+>  ## 📪 Contatti e supporto
+Nel caso **NAO Smart AI** sia adottato da qualche scuola, ospedali o altri enti con finalità sociali è gradita la segnalazione scrivendo a [nao@colamonicochiarulli.edu.it](mailto:nao@colamonicochiarulli.edu.it).
+
+Alla stessa mail è possibile scrivere per richieste di supporto.
 
 ---
 **NAO Smart AI** - *Rende la robotica sociale intelligente, empatica e accessibile* 🤖❤️
@@ -198,11 +213,11 @@ at IISS Colamonico-Chiarulli, Acquaviva delle Fonti (BA), Italy"
 
 Any deployment in educational or healthcare settings must prominently 
 display:
-
-**Powered by NAO Smart AI
+----
+Powered by NAO Smart AI
 Open Source project by Prof. Rino Andriano & Prof. Vito Trifone Gargano
-IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA), Italy**
-
+IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA), Italy
+----
 
 #### Public deployments and demonstrations:
 
@@ -302,4 +317,3 @@ d) Warrant that their contributions are original or properly licensed
 
 Contributors retain copyright on their specific contributions and 
 will be acknowledged in the AUTHORS or CONTRIBUTORS file.
-
