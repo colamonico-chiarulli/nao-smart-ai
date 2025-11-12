@@ -5,7 +5,7 @@ File:	web_api/ai_prompts/system_prompt.py
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: January 16th 2025 6:01:11 pm
 -----
-Last Modified: 	October 02nd 2025 06:45:00 pm
+Last Modified: 	November 11nd 2025 10:30:00 am
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -39,6 +39,7 @@ The following attribution requirements apply to this work:
 For full Additional Terms see the LICENSE file.
 ------------------------------------------------------------------------------
 """
+from google import genai
 
 # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
 PROTECTED_ATTRIBUTION = {
@@ -73,26 +74,39 @@ GENERATION_CONFIG_BASE = {
 }
 
 # Funzione helper per creare lo schema
-def create_response_schema(movements_list):
-    return {
-        "type": "OBJECT",
-        "properties": {
-            "chunks": {
-                "type": "ARRAY",
-                "items": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "text": {"type": "STRING"},
-                        "movements": {
-                            "type": "ARRAY",
-                            "items": {
-                                "type": "STRING",
-                                "enum": movements_list  # parametro
-                            }
-                        }
-                    },
-                    "required": ["text", "movements"] #Forzo LLM a generare entrambi
-                }
-            }
-        }
-    }
+def create_response_schema(movements_list, actions_list):
+    # Aggiungi NO_ACTION alla lista delle opzioni valide
+    full_actions_enum = actions_list + ["NO_ACTION"]
+    
+    return genai.types.Schema(
+            type = genai.types.Type.OBJECT,
+            description = "Schema di risposta per il robot NAO",
+            required = ["action", "chunks"], 
+            properties = {
+                "action": genai.types.Schema(
+                    type = genai.types.Type.STRING,
+                    description = "L'azione complessa da eseguire o NO_ACTION",
+                    enum = full_actions_enum,
+                ),
+                "chunks": genai.types.Schema(
+                    type = genai.types.Type.ARRAY,
+                    description = "Lista di frasi e movimenti associati",
+                    items = genai.types.Schema(
+                        type = genai.types.Type.OBJECT,
+                        required = ["text", "movements"],
+                        properties = {
+                            "text": genai.types.Schema(
+                                type = genai.types.Type.STRING,
+                            ),
+                            "movements": genai.types.Schema(
+                                type = genai.types.Type.ARRAY,
+                                items = genai.types.Schema(
+                                    type = genai.types.Type.STRING,
+                                    enum = movements_list,
+                                ),
+                            ),
+                        },
+                    ),
+                ),
+            },
+        )
