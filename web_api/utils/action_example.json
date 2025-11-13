@@ -1,0 +1,13 @@
+{
+    "actions_library": [
+        "actor/CallSomeone",
+        "actor/DriveCar",
+        "animals/Elephant",
+        "animals/Gorilla",
+        "animals/Mouse",
+        "dance/FunnyDancer",
+        "dance/GangGnamStyle",
+        "dance/Macarena",
+        "fitness/Pushup",
+   ]
+}

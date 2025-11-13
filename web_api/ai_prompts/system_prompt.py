@@ -69,7 +69,7 @@ GENERATION_CONFIG_BASE = {
 }
 
 # Funzione helper per creare lo schema
-def create_response_schema(movements_list):
+def create_response_schema(movements_list, actions_list):
     return {
         "type": "OBJECT",
         "properties": {
@@ -85,9 +85,14 @@ def create_response_schema(movements_list):
                                 "type": "STRING",
                                 "enum": movements_list  # parametro
                             }
-                        }
+                        },
                     },
-                    "required": ["text", "movements"] #Forzo LLM a generare entrambi
+                    "required": ["text", "movements"], #Forzo LLM a generare entrambi
+            "action": {
+                "type": "STRING",
+                    "enum": actions_list  # parametro
+                        }
+                    }
                 }
             }
         }

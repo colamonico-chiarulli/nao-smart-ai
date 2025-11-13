@@ -83,9 +83,10 @@ class GeminiChatAPI:
         
         self.client = genai.Client(api_key=api_key)
         
-        # Recupera i movimenti del robot dal file movements.json
+        # Recupera i movimenti e le azioni del robot dai file movements.json e actions.json
         movements_list = self._get_movements_from_file()
-        response_schema = create_response_schema(movements_list)
+        actions_list = self._get_movements_from_file()
+        response_schema = create_response_schema(movements_list, actions_list)
         
         # Configura le SYSTEM_INSTRUCTION 
         # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
@@ -147,12 +148,37 @@ class GeminiChatAPI:
                 self.logger.log_warning("movements_library vuoto o non trovato")
                 
             return movements
-            
         except json.JSONDecodeError as e:
             self.logger.log_error(f"Errore nel parsing JSON di movements.json: {e}")
             return []
         except Exception as e:
             self.logger.log_error(f"Errore nel caricamento dei movements: {e}")
+            return []
+        
+    def _get_actions_from_file(self):
+        """Legge le azioni dal file actions.json"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            actions_path = os.path.join(current_dir, "actions.json")
+
+            if not os.path.exists(actions_path):
+                self.logger.log_error(f"File actions.json non trovato: {actions_path}")
+                return []
+
+            with open(actions_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+                actions = data.get('actions_library', [])
+                
+            if not actions:
+                self.logger.log_warning("actions_library vuoto o non trovato")
+                
+            return actions
+            
+        except json.JSONDecodeError as e:
+            self.logger.log_error(f"Errore nel parsing JSON di actions.json: {e}")
+            return []
+        except Exception as e:
+            self.logger.log_error(f"Errore nel caricamento dei actions: {e}")
             return []
 
     def _load_ai_personality(self):
