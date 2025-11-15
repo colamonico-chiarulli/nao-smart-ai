@@ -156,7 +156,7 @@ Progetto sviluppato da:
 - **Docenti** : Rino Andriano e Gargano Vito Trifone
 - **Presso**  : IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA)
 
-Corso di approfondimento per:
+Iniziative Didattiche (progettazione, manutenzione e sviluppo) 
 - **Studenti**: Studenti delle Classi 3ª, 4ª e 5ª Informatica e Telecomunicazioni
 - **Percorso**: PNRR D.M. 65 "*AI Smart Bots: Assistenti Virtuali Avanzati*" a.s. 2024-25
 - **Percorso**: PTOF "*NAO Smart AI - Developers Team*" a.s. 2025-26
