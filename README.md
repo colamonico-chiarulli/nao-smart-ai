@@ -160,7 +160,7 @@ Progetto sviluppato da:
 - **Docenti** : Rino Andriano e Gargano Vito Trifone
 - **Presso**  : IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA)
 
-Corso di approfondimento per:
+Iniziative Didattiche (progettazione, manutenzione e sviluppo) 
 - **Studenti**: Studenti delle Classi 3ª, 4ª e 5ª Informatica e Telecomunicazioni
 - **Percorso**: PNRR D.M. 65 "*AI Smart Bots: Assistenti Virtuali Avanzati*" a.s. 2024-25
 - **Percorso**: PTOF "*NAO Smart AI - Developers Team*" a.s. 2025-26
@@ -191,6 +191,17 @@ Additional Terms under Section 7(b):
 >   2. System prompts containing author information cannot be modified
 >   3. The robot must always identify its original creators as specified 
 >      in the source code
+
+---
+> ## 🏆 Riconoscimenti e Premi
+
+ - il 14 novembre 2025 - **NAO Smart AI** è stato premiato, classificandosi al **primo posto** del concorso nazionale [**Premio Imprendi - Innovation Champions 2025**](https://www.imprendi.org/premi/#premio-imprendi-innovazione) della Fondazione Imprendi di Padova
+---
+
+>  ## 📪 Contatti e supporto
+Nel caso **NAO Smart AI** sia adottato da qualche scuola, ospedali o altri enti con finalità sociali è gradita la segnalazione scrivendo a [nao@colamonicochiarulli.edu.it](mailto:nao@colamonicochiarulli.edu.it).
+
+Alla stessa mail è possibile scrivere per richieste di supporto.
 
 ---
 **NAO Smart AI** - *Rende la robotica sociale intelligente, empatica e accessibile* 🤖❤️
