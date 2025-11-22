@@ -71,27 +71,26 @@ GENERATION_CONFIG_BASE = {
 # Funzione helper per creare lo schema
 def create_response_schema(movements_list, actions_list):
     return {
-        "type": "OBJECT",
+        "type": "object",
         "properties": {
             "chunks": {
-                "type": "ARRAY",
+                "type": "array",
                 "items": {
-                    "type": "OBJECT",
+                    "type": "object",
                     "properties": {
-                        "text": {"type": "STRING"},
+                        "text": {"type": "string"},
                         "movements": {
-                            "type": "ARRAY",
+                            "type": "array",
                             "items": {
-                                "type": "STRING",
+                                "type": "string",
                                 "enum": movements_list  # parametro
                             }
                         },
                     },
                     "required": ["text", "movements"], #Forzo LLM a generare entrambi
             "action": {
-                "type": "STRING",
+                "type": "string",
                     "enum": actions_list  # parametro
-                        }
                     }
                 }
             }
