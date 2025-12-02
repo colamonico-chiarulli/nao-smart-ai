@@ -122,6 +122,29 @@ def create_app():
         Richiede un file audio WAV mono 16bit come 'audio' in multipart/form-data
         """
         return stt.handle_stt_request()
+
+    @app.route("/stt/vosk/fast", methods=["POST"])
+    def speech_to_text_vosk_fast():
+        """
+        Endpoint per Speech-to-Text con Vosk (offline) ottimizzato
+        Accetta OGG (o altri formati), converte lato server e trascrive.
+        """
+        # Verifica presenza file audio
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'Nessun file audio fornito'}), 400
+        
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'success': False, 'error': 'Nome file non valido'}), 400
+
+        # Usa la nuova funzione transcribe_ogg
+        success, result = stt.transcribe_ogg(audio_file)
+        
+        if success:
+            return jsonify({'success': True, **result}), 200
+        else:
+            status_code = 503 if 'instructions' in result else 200
+            return jsonify({'success': False, **result}), status_code
     
     @app.route("/stt/status", methods=["GET"])
     def stt_status():

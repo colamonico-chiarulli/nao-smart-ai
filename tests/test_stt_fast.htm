@@ -1,0 +1,1345 @@
+<!--
+File:	/tests/test_stt_fast.htm
+-----
+Web client Test STT Fast (OGG) - NAO-Smart-AI API
+-----
+@author  Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+@copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
+Created Date: Monday, December 2nd 2025, 21:00:00 pm
+-----
+Last Modified: 	December 2nd 2025, 21:00:00 pm
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
+-----
+@license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    
+Additional Terms under Section 7(b):
+
+The following attribution requirements apply to this work:
+
+1. Copyright notices and author attribution in source code files
+   cannot be removed or altered.
+2. Any interactive user interface must preserve and display
+   author attribution (Copyright, authors, project name).
+3. System prompts containing author information cannot be modified
+4. Public demonstrations, publications and derivative works
+   must credit the original authors.
+
+For full Additional Terms see the LICENSE file.
+------------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAO STT FAST Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .config-section {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .config-label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #f59e0b;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .mode-option {
+            padding: 15px;
+            border: 3px solid #d1d5db;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-option:hover {
+            border-color: #f59e0b;
+            background: #f9fafb;
+        }
+
+        .mode-option.selected {
+            border-color: #f59e0b;
+            background: #fff7ed;
+        }
+
+        .mode-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .mode-name {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .mode-description {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-online {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-offline {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status-recording {
+            background: #f59e0b;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #d97706;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #4b5563;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-section {
+            background: #f3f4f6;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .input-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .record-section {
+            text-align: center;
+        }
+
+        .record-button {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .record-button.ready {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            animation: recordPulse 1s infinite;
+        }
+
+        .record-button.processing {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        @keyframes recordPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .record-button:hover:not(:disabled) {
+            transform: scale(1.1);
+        }
+
+        .record-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .info-text {
+            text-align: center;
+            color: #666;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .upload-area:hover {
+            border-color: #f59e0b;
+            background: #f9fafb;
+        }
+
+        .upload-area.dragging {
+            border-color: #f59e0b;
+            background: #fff7ed;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #374151;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .upload-subtext {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .loaded-file {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .loaded-file.active {
+            display: block;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .file-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-icon {
+            font-size: 32px;
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #374151;
+        }
+
+        .file-size {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .test-button {
+            padding: 15px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .test-button:hover:not(:disabled) {
+            border-color: #f59e0b;
+            background: #f9fafb;
+        }
+
+        .test-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .test-button.processing {
+            border-color: #f59e0b;
+            background: #fff7ed;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            min-height: 120px;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            color: #1f2937;
+            font-size: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            min-height: 50px;
+        }
+
+        .result-text.empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #f59e0b;
+        }
+
+        .log-section {
+            margin-top: 30px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .log-title {
+            font-weight: bold;
+            color: #374151;
+            font-size: 16px;
+        }
+
+        .log-container {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .log-entry {
+            color: #e5e7eb;
+            padding: 8px;
+            border-bottom: 1px solid #374151;
+            line-height: 1.6;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-timestamp {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .log-mode {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .log-time {
+            color: #34d399;
+            font-weight: bold;
+        }
+
+        .log-text {
+            color: #fbbf24;
+            margin-top: 4px;
+        }
+
+        .log-empty {
+            color: #6b7280;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .visualizer-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .audio-visualizer {
+            width: 100%;
+            height: 60px;
+            background: #1f2937;
+            border-radius: 10px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: #374151;
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb:hover {
+            background: #d97706;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>⚡ NAO STT FAST Test Interface<span class="badge">OGG</span></h1>
+        <div class="subtitle">Test interfaccia per Speech-to-Text modalità FAST con supporto OGG/Opus</div>
+
+        <!-- Configurazione Server -->
+        <div class="config-section">
+            <label class="config-label">🔧 Server STT URL:</label>
+            <input type="text" id="serverUrl" class="config-input" value="https://c0l4m0n1c0.ydns.eu:19367/api3"
+                placeholder="https://c0l4m0n1c0.ydns.eu:19367/api3">
+
+            <!-- Selezione Modalità -->
+            <label class="config-label" style="margin-top: 20px;">⚙️ Seleziona modalità:</label>
+            <div class="mode-selector">
+                <div class="mode-option selected" id="modeFast" data-mode="fast">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-name">FAST Mode</div>
+                    <div class="mode-description">OGG/Opus - Veloce</div>
+                </div>
+                <div class="mode-option" id="modeStandard" data-mode="standard">
+                    <div class="mode-icon">🔴</div>
+                    <div class="mode-name">Standard Mode</div>
+                    <div class="mode-description">WAV - Compatibile</div>
+                </div>
+            </div>
+
+            <div class="status-row">
+                <span id="statusBadge" class="status-badge status-offline">⚫ Offline</span>
+                <button id="testConnectionBtn" class="btn btn-primary">🔍 Test Connessione</button>
+            </div>
+        </div>
+
+        <!-- Sezione Input (Tabs) -->
+        <div class="input-section">
+            <div class="input-tabs">
+                <button class="tab-button active" id="tabRecord">🎙️ Registra Audio</button>
+                <button class="tab-button" id="tabUpload">📁 Carica File</button>
+            </div>
+
+            <!-- Tab Registrazione -->
+            <div class="tab-content active" id="contentRecord">
+                <div class="record-section">
+                    <button id="recordButton" class="record-button ready" disabled>
+                        <div id="buttonText">Caricamento...</div>
+                    </button>
+                    <div class="info-text" id="infoText">Testa prima la connessione al server</div>
+
+                    <div class="visualizer-container" id="visualizerContainer">
+                        <canvas id="visualizer" class="audio-visualizer"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Upload -->
+            <div class="tab-content" id="contentUpload">
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📂</div>
+                        <div class="upload-text">Clicca o trascina un file audio</div>
+                        <div class="upload-subtext" id="uploadSubtext">Supporto file .ogg, .opus (max 10MB) - FAST mode
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept=".ogg,.opus,audio/ogg,audio/opus">
+
+                    <div class="loaded-file" id="loadedFile">
+                        <div class="file-info">
+                            <div class="file-details">
+                                <div class="file-icon">🎵</div>
+                                <div>
+                                    <div class="file-name" id="fileName">-</div>
+                                    <div class="file-size" id="fileSize">-</div>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-secondary" id="removeFileBtn">🗑️ Rimuovi</button>
+                            </div>
+                        </div>
+                        <audio controls class="audio-player" id="audioPlayer"></audio>
+
+                        <button class="test-button" id="testVoskFast">
+                            ⚡ Testa con Vosk FAST
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risultati -->
+        <div class="result-section">
+            <div class="result-label">📝 Trascrizione:</div>
+            <div id="resultText" class="result-text empty">
+                Nessuna trascrizione ancora disponibile
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">⏱️ Tempo</div>
+                    <div class="stat-value" id="processingTime">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">📊 Parole</div>
+                    <div class="stat-value" id="wordCount">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🎯 Modalità</div>
+                    <div class="stat-value" id="engine">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">📦 Formato</div>
+                    <div class="stat-value" id="format">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="log-section">
+            <div class="log-header">
+                <div class="log-title">📋 Log delle Trascrizioni</div>
+                <button id="clearLogBtn" class="btn btn-secondary">🗑️ Cancella Log</button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-empty">Nessuna trascrizione effettuata</div>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="message error-message"></div>
+        <div id="successMessage" class="message success-message"></div>
+
+        <footer>
+            Powered by Vosk FAST Mode • Colamonico Chiarulli
+        </footer>
+    </div>
+
+    <script>
+        // Configurazione
+        let serverUrl = 'https://c0l4m0n1c0.ydns.eu:19367/api3';
+        let selectedMode = 'fast'; // 'fast' o 'standard'
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioContext = null;
+        let analyser = null;
+        let animationId = null;
+        let streamRef = null;
+        let persistentStream = null;
+        let logEntries = [];
+        let uploadedFile = null;
+
+        // Elementi DOM
+        const serverUrlInput = document.getElementById('serverUrl');
+        const statusBadge = document.getElementById('statusBadge');
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const recordButton = document.getElementById('recordButton');
+        const buttonText = document.getElementById('buttonText');
+        const infoText = document.getElementById('infoText');
+        const resultText = document.getElementById('resultText');
+        const processingTime = document.getElementById('processingTime');
+        const wordCount = document.getElementById('wordCount');
+        const engineText = document.getElementById('engine');
+        const formatText = document.getElementById('format');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const visualizerContainer = document.getElementById('visualizerContainer');
+        const visualizer = document.getElementById('visualizer');
+        const modeFast = document.getElementById('modeFast');
+        const modeStandard = document.getElementById('modeStandard');
+        const logContainer = document.getElementById('logContainer');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        const uploadSubtext = document.getElementById('uploadSubtext');
+
+        // Tab elements
+        const tabRecord = document.getElementById('tabRecord');
+        const tabUpload = document.getElementById('tabUpload');
+        const contentRecord = document.getElementById('contentRecord');
+        const contentUpload = document.getElementById('contentUpload');
+
+        // Upload elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loadedFile = document.getElementById('loadedFile');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        const testVoskFast = document.getElementById('testVoskFast');
+
+        // Tab switching
+        tabRecord.addEventListener('click', () => {
+            tabRecord.classList.add('active');
+            tabUpload.classList.remove('active');
+            contentRecord.classList.add('active');
+            contentUpload.classList.remove('active');
+        });
+
+        tabUpload.addEventListener('click', () => {
+            tabUpload.classList.add('active');
+            tabRecord.classList.remove('active');
+            contentUpload.classList.add('active');
+            contentRecord.classList.remove('active');
+        });
+
+        // Upload area interactions
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            const fileName = file.name.toLowerCase();
+            const isOgg = fileName.endsWith('.ogg') || fileName.endsWith('.opus');
+            const isWav = fileName.endsWith('.wav');
+
+            // Verifica formato in base alla modalità
+            if (selectedMode === 'fast' && !isOgg) {
+                showMessage('error', '❌ In modalità FAST sono supportati solo file OGG/Opus');
+                return;
+            }
+
+            if (selectedMode === 'standard' && !isWav) {
+                showMessage('error', '❌ In modalità Standard sono supportati solo file WAV');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showMessage('error', '❌ File troppo grande (max 10MB)');
+                return;
+            }
+
+            uploadedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+
+            const url = URL.createObjectURL(file);
+            audioPlayer.src = url;
+
+            loadedFile.classList.add('active');
+            showMessage('success', '✅ File caricato con successo');
+        }
+
+        removeFileBtn.addEventListener('click', () => {
+            uploadedFile = null;
+            loadedFile.classList.remove('active');
+            fileInput.value = '';
+            audioPlayer.src = '';
+            showMessage('success', '✅ File rimosso');
+        });
+
+        // Test button
+        async function testWithMode() {
+            if (!uploadedFile) {
+                showMessage('error', '❌ Nessun file caricato');
+                return;
+            }
+
+            testVoskFast.disabled = true;
+            testVoskFast.classList.add('processing');
+            testVoskFast.textContent = '⏳ Elaborazione...';
+
+            try {
+                await sendAudioToServer(uploadedFile);
+            } finally {
+                testVoskFast.disabled = false;
+                testVoskFast.classList.remove('processing');
+                testVoskFast.textContent = selectedMode === 'fast' ? '⚡ Testa con Vosk FAST' : '🔴 Testa con Vosk';
+            }
+        }
+
+        testVoskFast.addEventListener('click', testWithMode);
+
+        // Aggiorna URL server
+        serverUrlInput.addEventListener('change', () => {
+            serverUrl = serverUrlInput.value.trim();
+            console.log('Server URL aggiornato:', serverUrl);
+        });
+
+        // Selezione modalità
+        function selectMode(mode, element) {
+            selectedMode = mode;
+            [modeFast, modeStandard].forEach(el => {
+                el.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            // Aggiorna accettazione file e testo
+            if (mode === 'fast') {
+                fileInput.accept = '.ogg,.opus,audio/ogg,audio/opus';
+                uploadSubtext.textContent = 'Supporto file .ogg, .opus (max 10MB) - FAST mode';
+                testVoskFast.textContent = '⚡ Testa con Vosk FAST';
+            } else {
+                fileInput.accept = '.wav,audio/wav';
+                uploadSubtext.textContent = 'Supporto file .wav (max 10MB) - Standard mode';
+                testVoskFast.textContent = '🔴 Testa con Vosk';
+            }
+
+            // Reset file caricato se non compatibile
+            if (uploadedFile) {
+                const fileName = uploadedFile.name.toLowerCase();
+                const isOgg = fileName.endsWith('.ogg') || fileName.endsWith('.opus');
+                const isWav = fileName.endsWith('.wav');
+
+                if ((mode === 'fast' && !isOgg) || (mode === 'standard' && !isWav)) {
+                    uploadedFile = null;
+                    loadedFile.classList.remove('active');
+                    fileInput.value = '';
+                    audioPlayer.src = '';
+                    showMessage('error', `❌ File rimosso: non compatibile con modalità ${mode.toUpperCase()}`);
+                }
+            }
+
+            console.log('Modalità selezionata:', mode);
+            showMessage('success', `✅ Modalità selezionata: ${mode === 'fast' ? 'FAST (OGG)' : 'Standard (WAV)'}`);
+            updateInfoText();
+        }
+
+        modeFast.addEventListener('click', () => selectMode('fast', modeFast));
+        modeStandard.addEventListener('click', () => selectMode('standard', modeStandard));
+
+        // Aggiorna testo info in base alla modalità
+        function updateInfoText() {
+            if (!recordButton.disabled) {
+                const modeText = selectedMode === 'fast' ? 'FAST (OGG)' : 'Standard (WAV)';
+                infoText.textContent = `Clicca per registrare con Vosk ${modeText}`;
+            }
+        }
+
+        // Aggiungi entry al log
+        function addLogEntry(mode, text, time, format) {
+            const timestamp = new Date().toLocaleTimeString('it-IT');
+
+            const logEntry = {
+                timestamp,
+                mode,
+                text,
+                time,
+                format
+            };
+
+            logEntries.unshift(logEntry);
+
+            if (logEntries.length > 50) {
+                logEntries = logEntries.slice(0, 50);
+            }
+
+            renderLog();
+        }
+
+        // Renderizza il log
+        function renderLog() {
+            if (logEntries.length === 0) {
+                logContainer.innerHTML = '<div class="log-empty">Nessuna trascrizione effettuata</div>';
+                return;
+            }
+
+            logContainer.innerHTML = logEntries.map(entry => {
+                return `
+                    <div class="log-entry">
+                        <div class="log-timestamp">${entry.timestamp}</div>
+                        <div>
+                            <span class="log-mode">${entry.mode.toUpperCase()}</span> • 
+                            Tempo: <span class="log-time">${entry.time.toFixed(2)}s</span> • 
+                            Formato: <span style="color: #60a5fa">${entry.format}</span>
+                        </div>
+                        <div class="log-text">"${entry.text}"</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Cancella log
+        clearLogBtn.addEventListener('click', () => {
+            if (confirm('Vuoi cancellare tutto il log?')) {
+                logEntries = [];
+                renderLog();
+                showMessage('success', '✅ Log cancellato');
+            }
+        });
+
+        // Test connessione al server
+        async function testConnection() {
+            testConnectionBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${serverUrl}/stt/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Server status:', data);
+
+                    statusBadge.textContent = '🟢 Online';
+                    statusBadge.className = 'status-badge status-online';
+
+                    showMessage('success', `✅ Server connesso! Vosk disponibile`);
+
+                    await initializeMicrophone();
+
+                } else {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Errore connessione:', error);
+                statusBadge.textContent = '⚫ Offline';
+                statusBadge.className = 'status-badge status-offline';
+                showMessage('error', `❌ Impossibile connettersi al server: ${error.message}`);
+                recordButton.disabled = true;
+            } finally {
+                testConnectionBtn.disabled = false;
+            }
+        }
+
+        // Inizializza microfono
+        async function initializeMicrophone() {
+            if (persistentStream) {
+                console.log('Stream già attivo');
+                recordButton.disabled = false;
+                buttonText.textContent = '🎤 Registra';
+                updateInfoText();
+                return;
+            }
+
+            try {
+                console.log('Richiesta accesso microfono...');
+                persistentStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        sampleRate: 16000,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+
+                console.log('✅ Accesso microfono autorizzato');
+
+                recordButton.disabled = false;
+                buttonText.textContent = '🎤 Registra';
+                updateInfoText();
+
+                showMessage('success', '✅ Microfono pronto!');
+
+            } catch (error) {
+                console.error('Errore accesso microfono:', error);
+                showMessage('error', `❌ Impossibile accedere al microfono: ${error.message}`);
+                recordButton.disabled = true;
+            }
+        }
+
+        // Mostra messaggio
+        function showMessage(type, message) {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            if (type === 'error') {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            } else if (type === 'success') {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+            }
+
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // Inizializza audio context per visualizzazione
+        function initAudioContext(stream) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+
+            visualizerContainer.style.display = 'block';
+            visualize();
+        }
+
+        // Visualizzazione forma d'onda
+        function visualize() {
+            const canvas = visualizer;
+            const canvasCtx = canvas.getContext('2d');
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            function draw() {
+                if (!isRecording) {
+                    visualizerContainer.style.display = 'none';
+                    return;
+                }
+
+                animationId = requestAnimationFrame(draw);
+                analyser.getByteTimeDomainData(dataArray);
+
+                canvasCtx.fillStyle = '#1f2937';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = '#f59e0b';
+                canvasCtx.beginPath();
+
+                const sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * canvas.height / 2;
+
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
+                }
+
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
+            }
+
+            draw();
+        }
+
+        // Inizia registrazione
+        async function startRecording() {
+            if (!persistentStream) {
+                showMessage('error', '❌ Stream audio non disponibile');
+                return;
+            }
+
+            try {
+                streamRef = persistentStream;
+                initAudioContext(streamRef);
+
+                // Usa mimeType appropriato in base alla modalità
+                const mimeType = selectedMode === 'fast' ? 'audio/ogg;codecs=opus' : 'audio/webm';
+
+                const options = MediaRecorder.isTypeSupported(mimeType)
+                    ? { mimeType: mimeType }
+                    : {};
+
+                mediaRecorder = new MediaRecorder(streamRef, options);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    console.log('Registrazione fermata');
+
+                    const mimeType = mediaRecorder.mimeType || 'audio/ogg';
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+
+                    console.log('Audio registrato, dimensione:', audioBlob.size, 'bytes, tipo:', mimeType);
+
+                    await sendAudioToServer(audioBlob);
+
+                    if (audioContext) {
+                        audioContext.close();
+                        audioContext = null;
+                    }
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+
+                recordButton.className = 'record-button recording';
+                buttonText.textContent = '⏹️ Stop';
+                infoText.textContent = 'Registrazione in corso... Clicca per fermare';
+                statusBadge.textContent = '🔴 Registrando';
+                statusBadge.className = 'status-badge status-recording';
+
+            } catch (error) {
+                console.error('Errore avvio registrazione:', error);
+                showMessage('error', `❌ Errore registrazione: ${error.message}`);
+            }
+        }
+
+        // Ferma registrazione
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                isRecording = false;
+
+                recordButton.className = 'record-button processing';
+                buttonText.textContent = '⏳ Elaborazione...';
+
+                const modeText = selectedMode === 'fast' ? 'FAST' : 'Standard';
+                infoText.textContent = `Invio a Vosk ${modeText}...`;
+                recordButton.disabled = true;
+            }
+        }
+
+        // Invia audio al server
+        async function sendAudioToServer(audioBlob) {
+            try {
+                const formData = new FormData();
+                const fileName = selectedMode === 'fast' ? 'recording.ogg' : 'recording.wav';
+                formData.append('audio', audioBlob, fileName);
+
+                const endpoint = selectedMode === 'fast' ? '/stt/vosk/fast' : '/stt/vosk';
+
+                console.log(`Invio audio in modalità ${selectedMode.toUpperCase()}... Dimensione:`, audioBlob.size, 'bytes');
+                console.log(`Endpoint: ${serverUrl}${endpoint}`);
+
+                const response = await fetch(`${serverUrl}${endpoint}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log('Risposta server:', data);
+
+                if (response.ok && data.success) {
+                    const transcribedText = data.text || 'Nessun testo riconosciuto';
+                    resultText.textContent = transcribedText;
+                    resultText.className = 'result-text';
+
+                    const procTime = data.processing_time?.toFixed(2) || '0';
+                    processingTime.textContent = `${procTime}s`;
+                    wordCount.textContent = data.word_count || '0';
+                    engineText.textContent = data.engine?.toUpperCase() || 'VOSK';
+                    formatText.textContent = selectedMode === 'fast' ? 'OGG' : 'WAV';
+
+                    const modeText = selectedMode === 'fast' ? 'FAST (OGG)' : 'Standard (WAV)';
+                    showMessage('success', `✅ Trascrizione ${modeText} completata in ${procTime}s`);
+
+                    addLogEntry(
+                        data.engine || selectedMode,
+                        transcribedText,
+                        data.processing_time || 0,
+                        selectedMode === 'fast' ? 'OGG' : 'WAV'
+                    );
+
+                } else {
+                    showMessage('error', `❌ Errore: ${data.error || 'Errore sconosciuto'}`);
+                    resultText.textContent = 'Errore nella trascrizione';
+                    resultText.className = 'result-text empty';
+                }
+
+            } catch (error) {
+                console.error('Errore invio audio:', error);
+                showMessage('error', `❌ Errore comunicazione con server: ${error.message}`);
+            } finally {
+                recordButton.className = 'record-button ready';
+                buttonText.textContent = '🎤 Registra';
+                updateInfoText();
+                recordButton.disabled = false;
+                statusBadge.textContent = '🟢 Online';
+                statusBadge.className = 'status-badge status-online';
+            }
+        }
+
+        // Event listeners
+        testConnectionBtn.addEventListener('click', testConnection);
+
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        // Test connessione automatico all'avvio
+        window.addEventListener('load', () => {
+            console.log('Pagina caricata, test connessione automatico...');
+            setTimeout(testConnection, 500);
+        });
+    </script>
+</body>
+
+</html>

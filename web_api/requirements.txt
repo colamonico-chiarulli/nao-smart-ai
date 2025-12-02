@@ -7,4 +7,6 @@ google-genai
 gunicorn
 vosk
 gunicorn
+pydub
+audioop-lts
 
