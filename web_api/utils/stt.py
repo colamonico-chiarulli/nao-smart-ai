@@ -47,6 +47,17 @@ import wave
 import tempfile
 from datetime import datetime
 from flask import request, jsonify
+try:
+    from pydub import AudioSegment
+    PYDUB_AVAILABLE = True
+    
+    # Configura path espliciti per ffmpeg/ffprobe
+    # Questo risolve problemi quando il servizio gira con utente daemon
+    # che non ha accesso al PATH completo
+    AudioSegment.converter = "/usr/bin/ffmpeg"
+    AudioSegment.ffprobe = "/usr/bin/ffprobe"
+except ImportError:
+    PYDUB_AVAILABLE = False
 
 # Import Vosk con gestione errori
 try:
@@ -396,6 +407,138 @@ class STT:
                 'error': f'Errore server: {str(e)}'
             }
     
+    def transcribe_ogg(self, audio_file):
+        """
+        Trascrive un file audio OGG (o altro formato supportato da ffmpeg)
+        convertendolo prima in WAV mono 16kHz per Vosk.
+        
+        Args:
+            audio_file: File audio da Flask request.files
+            
+        Returns:
+            tuple: (success, result_dict)
+        """
+        start_time = datetime.now()
+        audio_path = None
+        wav_path = None
+        
+        # Verifica disponibilità Vosk e Pydub
+        if not VOSK_AVAILABLE:
+            return False, {
+                'error': 'Libreria Vosk non installata',
+                'instructions': 'Installa con: pip install vosk'
+            }
+            
+        if not PYDUB_AVAILABLE:
+             return False, {
+                'error': 'Libreria pydub non installata',
+                'instructions': 'Installa con: pip install pydub (e assicurati di avere ffmpeg)'
+            }
+        
+        if not self.is_available or self.vosk_model is None:
+            return False, {
+                'error': 'Modello Vosk non caricato',
+                'instructions': self.error_message if self.error_message else 'Verifica la configurazione'
+            }
+            
+        try:
+            # Salva file temporaneo originale (OGG)
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_audio:
+                audio_path = temp_audio.name
+                audio_file.save(audio_path)
+                file_size = os.path.getsize(audio_path)
+            
+            if file_size < 100: # OGG può essere piccolo ma valido, ma < 100 byte è sospetto
+                 if self.logger:
+                    self.logger.log_warning(f"[STT-Fast] File audio troppo piccolo: {file_size} bytes")
+                 if audio_path and os.path.exists(audio_path):
+                    os.unlink(audio_path)
+                 return False, {'error': 'File audio troppo piccolo o vuoto', 'text': ''}
+
+            # Conversione con Pydub
+            try:
+                sound = AudioSegment.from_file(audio_path)
+                
+                # Log parametri audio originale
+                if self.logger:
+                    self.logger.log_info(f"[STT-Fast] Audio originale - Sample rate: {sound.frame_rate}Hz, Canali: {sound.channels}, Durata: {len(sound)/1000:.2f}s, Bitrate: {sound.sample_width*8}bit")
+                
+                # Converti a 16kHz, Mono, 16bit (default di export wav è 16bit)
+                sound = sound.set_frame_rate(16000).set_channels(1)
+                
+                if self.logger:
+                    self.logger.log_info(f"[STT-Fast] Audio convertito - Sample rate: {sound.frame_rate}Hz, Canali: {sound.channels}, Durata: {len(sound)/1000:.2f}s")
+                
+                # Esporta in WAV temporaneo
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_wav:
+                    wav_path = temp_wav.name
+                    sound.export(wav_path, format="wav")
+                    
+            except Exception as e:
+                if self.logger:
+                    self.logger.log_error(f"[STT-Fast] Errore conversione audio: {str(e)}")
+                # Cleanup
+                if audio_path and os.path.exists(audio_path): os.unlink(audio_path)
+                if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
+                return False, {'error': f'Errore conversione audio: {str(e)}'}
+
+            # Ora processa il WAV con Vosk (riutilizzando logica interna se possibile, 
+            # ma qui replichiamo per semplicità o chiamiamo _process_audio)
+            
+            try:
+                wf = wave.open(wav_path, "rb")
+            except wave.Error as e:
+                 # Cleanup
+                if audio_path and os.path.exists(audio_path): os.unlink(audio_path)
+                if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
+                return False, {'error': f'File WAV convertito non valido: {str(e)}'}
+
+            framerate = wf.getframerate()
+            full_text = self._process_audio(wf, framerate)
+            wf.close()
+            
+            # Cleanup
+            if audio_path and os.path.exists(audio_path): os.unlink(audio_path)
+            if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
+            
+            elapsed = (datetime.now() - start_time).total_seconds()
+            
+            if full_text:
+                if self.logger:
+                    word_count = len(full_text.split())
+                    self.logger.log_info(f"[STT-Fast] Trascrizione completata: '{full_text}' ({word_count} parole, {elapsed:.2f}s)")
+
+                return True, {
+                    'text': full_text,
+                    'language': 'it-IT',
+                    'processing_time': elapsed,
+                    'engine': 'vosk-fast',
+                    'word_count': len(full_text.split()),
+                    'offline': True
+                }
+            else:
+                if self.logger:
+                    self.logger.log_warning(f"[STT-Fast] Nessun testo riconosciuto (tempo: {elapsed:.2f}s)")
+
+                return False, {
+                    'error': 'Nessun testo riconosciuto',
+                    'text': '',
+                    'processing_time': elapsed
+                }
+
+        except Exception as e:
+            if self.logger:
+                self.logger.log_error(f"[STT-Fast] Errore generico: {str(e)}")
+            # Cleanup
+            if audio_path and os.path.exists(audio_path): 
+                try: os.unlink(audio_path) 
+                except: pass
+            if wav_path and os.path.exists(wav_path):
+                try: os.unlink(wav_path)
+                except: pass
+                
+            return False, {'error': f'Errore server: {str(e)}'}
+
     def handle_stt_request(self):
         """
         Handler per la richiesta Flask di STT
