@@ -9,4 +9,4 @@ vosk
 gunicorn
 pydub
 audioop-lts
-
+litellm

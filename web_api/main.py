@@ -47,7 +47,8 @@ For full Additional Terms see the LICENSE file.
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from utils.gemini_chat_api import GeminiChatAPI
+# from utils.gemini_chat_api import GeminiChatAPI
+from utils.llm_chat_api import LLMChatAPI
 from utils.stt import STT
 
 
@@ -60,7 +61,8 @@ def create_app():
     CORS(app)  # Abilita CORS per tutte le routes
 
     # Crea l'istanza del gestore API
-    chat_api = GeminiChatAPI()
+    # chat_api = GeminiChatAPI()
+    chat_api = LLMChatAPI()
 
     # Inizializza sistema STT Vosk
     stt = STT(logger=chat_api.logger)

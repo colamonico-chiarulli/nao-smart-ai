@@ -1,7 +1,8 @@
 #nao-smart-ai
 web_api/logs/chat*.txt
 web_api/ai_prompts/*_system.py
-!web_api/ai_prompts/example_system.py
+!web_api/ai_prompts/example_*.py
+web_api/ai_prompts/technical_prompt.py
 web_api/utils/movements.json
 web_api/utils/actions.json
 web_api/utils/actions_map.json
@@ -128,7 +129,7 @@ venv.bak/
 #  you could uncomment the following to ignore the enitre vscode folder
 .vscode/
 
-
+a
 # PyPI configuration file
 .pypirc
 
