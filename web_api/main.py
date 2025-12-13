@@ -43,7 +43,8 @@ The following attribution requirements apply to this work:
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from utils.gemini_chat_api import GeminiChatAPI
+# from utils.gemini_chat_api import GeminiChatAPI
+from utils.llm_chat_api import LLMChatAPI
 from utils.stt import STT
 
 
@@ -56,7 +57,8 @@ def create_app():
     CORS(app)  # Abilita CORS per tutte le routes
 
     # Crea l'istanza del gestore API
-    chat_api = GeminiChatAPI()
+    # chat_api = GeminiChatAPI()
+    chat_api = LLMChatAPI()
 
     # Inizializza sistema STT Vosk
     stt = STT(logger=chat_api.logger)
@@ -118,6 +120,29 @@ def create_app():
         Richiede un file audio WAV mono 16bit come 'audio' in multipart/form-data
         """
         return stt.handle_stt_request()
+
+    @app.route("/stt/vosk/fast", methods=["POST"])
+    def speech_to_text_vosk_fast():
+        """
+        Endpoint per Speech-to-Text con Vosk (offline) ottimizzato
+        Accetta OGG (o altri formati), converte lato server e trascrive.
+        """
+        # Verifica presenza file audio
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'Nessun file audio fornito'}), 400
+        
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'success': False, 'error': 'Nome file non valido'}), 400
+
+        # Usa la nuova funzione transcribe_ogg
+        success, result = stt.transcribe_ogg(audio_file)
+        
+        if success:
+            return jsonify({'success': True, **result}), 200
+        else:
+            status_code = 503 if 'instructions' in result else 200
+            return jsonify({'success': False, **result}), status_code
     
     @app.route("/stt/status", methods=["GET"])
     def stt_status():

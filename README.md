@@ -6,11 +6,11 @@
 [![License: AGPLv3](https://img.shields.io/badge/License-AGPLv3.0-green.svg)](https://opensource.org/license/agpl-v3)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![NAO Robot](https://img.shields.io/badge/NAO-Robot%206-red.svg)](https://www.aldebaran.com/en/nao)
-[![Google Gemini](https://img.shields.io/badge/Google-Gemini%20AI-brightgreen.svg)](https://ai.google.dev/)
+[![Any AI Models](https://img.shields.io/badge/LiteLLM%20AI%20Models-brightgreen.svg)](https://docs.litellm.ai/docs/providers)
 
 ## 📖 Descrizione
 
-**NAO Smart AI** è un progetto innovativo che trasforma il robot NAO 6 in un robot sociale intelligente, connettendolo ai servizi cloud di Google Gemini per creare conversazioni naturali ed empatiche. 
+**NAO Smart AI** è un progetto innovativo che trasforma il robot NAO 6 in un robot sociale intelligente, connettendolo allIntelligenza Artificiale per creare conversazioni naturali ed empatiche. 
 
 Il sistema supera i limiti delle risposte predefinite, offrendo:
 - 🗣️ **Dialoghi naturali dinamici** generati in tempo reale
@@ -18,12 +18,13 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - 🎯 **Personalità adattive di AI** multiple e attivabili tramite comandi vocali
 - 🔄 **Autonomia completa** - serve solo una connessione WiFi ad Internet
 - 🎪 **Controllo completamente vocale** - nessun PC da collegare a NAO
-- 🔈**Riconoscimento Audio potenziato** - Rispetto agli standard di NAO
+- 🔈**Riconoscimento Audio potenziato** - Con nuovo STT vosk su server 
+- 🎬 **Animazioni personalizzate con AI** - Possibilita per AI di scegliere in base al dialogo di avviare "un'azione" (ballare, suonare, ecc) da una libreria personale
 
 ## ✨ Caratteristiche principali
 
 ### 🧠 Intelligenza Artificiale Avanzata
-- Integrazione completa con **Google Gemini** per conversazioni contestuali
+- Integrazione completa con qualsiasi LLM (Google,Openai, Antropic, ecc) gestito da **liteLLM** (Agnostic LLM) per conversazioni contestuali
 - Analisi semantica in tempo reale per riconoscimento emotivo delle risposte
 - Generazione dinamica di risposte personalizzate
 
@@ -39,7 +40,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - Log dei dialoghi per analisi e miglioramento prompt AI
 
 ### 🌐 Architettura Scalabile
-- **Web API cloud** sviluppata in Python 3.11
+- **Web API cloud** sviluppata in Python 3.13
 - Gestione simultanea di più robot NAO
 - Conservazione della cronologia dei dialoghi
 
@@ -48,8 +49,8 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │                 │    │                  │    │                 │
-│   Robot NAO     │◄──►│   Web API Cloud  │◄──►│  Google Gemini  │
-│  (Python 2.7)   │    │  (Python 3.13)   │    │      AI         │
+│   Robot NAO     │◄──►│   Web API Cloud  │◄──►│   Any AI LLM    │
+│  (Python 2.7)   │    │  (Python 3.13)   │    │                 │
 │                 │    │                  │    │                 │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
@@ -63,23 +64,23 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 
 2. **Web API Cloud** (Python 3.13)
    - Riconoscimento audio STT
-   - Bridge tra NAO e Google Gemini
+   - Bridge tra NAO e Modelli AI - LLM 
    - Gestione personalità multiple
    - Elaborazione emotiva e storia dialoghi
 
-
-3. **Integrazione Google Gemini**
-   - Generazione dialoghi naturali
+3. **Integrazione Intelligenza Artificiale**
+   - Generazione dialoghi naturali con la personalità scelta
    - Analisi semantica ed emotiva
    - Risposte contestualizzate
-
+   - Associazioni di movimenti empatici
+   - Scelta di animazioni personalizzate
+   
 ## 🚀 Installazione e Setup
 
 ### Prerequisiti
 - Robot NAO 6 con NAOqi OS
 - Choregraphe Suite per sviluppo
-- Server cloud con Python 3.11+
-- Account Google AI Platform
+- Server cloud con Python 3.13+
 
 ### 1. Setup Web API
 ```bash
@@ -95,8 +96,13 @@ cp .env.example .env
 # Editare .env con le proprie chiavi API e gli altri parametri
 
 # Configurazione libreria movimenti
-cp movements.example.json movements.json
 # Editare movements.json con i movimenti di NAO che si vogliono gestire
+cp movements.example.json movements.json
+
+# Configurazione libreria animazioni personalizzate
+# Editare i file json con le azioni e le descrizioni si vogliono gestire con AI
+cp actions.example.json actions.json
+cp action_map.example.json action_map.json
 ```
 
 ### 2. Deploy su Cloud
@@ -149,7 +155,9 @@ nao-smart-ai/
 │   ├── logs/                 # Log giornaliero delle chat
 │   ├── models/               # Modelli STT Vosk
 │   ├── utils/                # classi ed utility
-│   └── utils/movements.json  # Libreria dei movimenti di NAO (personalizzabile)
+│   ├── utils/movements.json  # Libreria dei movimenti di NAO (personalizzabile)
+│   ├── utils/actions.json    # Libreria delle animazioni personalizzate (actions) per NAO (personalizzabile)
+│   └── utils/actions_map.json# Mappatura actions con "constrained completions" (personalizzabile)
 ├── nao-client/               # Client NAO (Python 2.7)
 └── tests/                    # Test suite
 ```

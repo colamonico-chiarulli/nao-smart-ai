@@ -1,16 +1,16 @@
 """
-File:	/web_api/utils/gemini_chat_api.py
+File:	/web_api/utils/llm_chat_api.py
 -----
-Classe GeminiChatAPI - per gestire le interazioni API con il modello Gemini
+Classe LLMChatAPI - per gestire le interazioni API con vari LLM tramite LiteLLM
 Le diverse azioni sono specificate nel campo action del JSON inviato.
-/gemini/chat  azioni: talk, end, hystory
-/gemini/admin azioni: list-chats, delete-chats
+api-url/chat  azioni: talk, end, hystory
+api-url/admin azioni: list-chats, delete-chats
 ------
 @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
 @copyright	(c)2024 Rino Andriano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	November 11nd 2025 10:30:00 am
+Last Modified: 	December 13th 2025 07:49:59 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -45,10 +45,10 @@ import os
 import json
 import re
 import importlib
+import random
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
-
+from litellm import completion
+import litellm
 from utils.cleantext import clean_text
 from utils.cleantext import clean_markdown
 from ai_prompts.system_prompt import SYSTEM_PROMPT_BASE
@@ -62,13 +62,13 @@ from flask import jsonify
 #Personalità di default in caso di errori
 ERROR_PERSONALITY = "Sei un robot sociale amichevole"
 
-class GeminiChatAPI:
+class LLMChatAPI:
     """
-    Classe per gestire le interazioni API con il modello Gemini
+    Classe per gestire le interazioni API con vari LLM tramite LiteLLM
     """
 
     def __init__(self, logs_dir="logs"):
-        """Inizializza l'API per la gestione delle chat con Gemini
+        """Inizializza l'API per la gestione delle chat con LLM
         Args: logs_dir -> Directory per i log delle chat
         """
         # Logger interno alla classe
@@ -77,12 +77,12 @@ class GeminiChatAPI:
         # Carica le variabili d'ambiente
         self._load_environment()
 
-        # Configura Gemini con l'API key
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY non trovata nelle variabili d'ambiente")
+        # Configura il modello LLM
+        self.llm_model = os.getenv("LLM_MODEL", "gemini/gemini-2.0-flash")
         
-        self.client = genai.Client(api_key=api_key)
+        # Gestione API Key Rotation
+        self.api_keys = self._load_api_keys()
+        self.current_key_index = 0
         
         # Recupera i movimenti e le azioni del robot dai file movements.json e actions.json
         movements_list = self._get_movements_from_file()
@@ -91,50 +91,21 @@ class GeminiChatAPI:
         # Estrae solo le CHIAVI (es. ACT_DANCE_MACARENA_FLOOR) per lo schema dell'AI
         actions_keys_list = list(self.actions_map.keys())
         
-        # Crea lo schema usando le chiavi
-        response_schema = create_response_schema(movements_list, actions_keys_list)
+        # Crea lo schema usando le chiavi (utile per il prompt di sistema)
+        self.response_schema = create_response_schema(movements_list, actions_keys_list)
         
         # Configura le SYSTEM_INSTRUCTION 
         # AGPL Section 7(b) Protected Attribution - DO NOT MODIFY
         personality = self._load_ai_personality()
         self.system_instruction = SYSTEM_PROMPT_BASE + personality
         
-        # Salva le safety settings
-        self.safety_settings = self._get_safety_settings()
-
-        # Salva response_schema per ricreare config dinamicamente
-        self.response_schema = response_schema
-
-        # Crea la configurazione di generazione (centralizzata)
-        self.generation_config = self._create_generation_config(self.system_instruction)
-        
         # Dizionario per memorizzare le chat attive
+        # Struttura: {chat_id: [{"role": "user", "content": "..."}, ...]}
         self.active_chats = {}
 
         # Dizionario per memorizzare le personalità personalizzate per ogni chat
         # Formato: {chat_id: personality_name}
         self.chat_personalities = {}
-
-        #Carica il modello LLM da .ENV - se non esiste carica il default
-        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-
-    def _create_generation_config(self, system_instruction):
-        """Crea una configurazione di generazione con la system_instruction specificata
-        Args:
-            system_instruction: La system instruction da utilizzare per la configurazione
-        Returns:
-            GenerateContentConfig: Configurazione di generazione per Gemini
-        """
-        return types.GenerateContentConfig(
-            temperature=GENERATION_CONFIG_BASE["temperature"],
-            top_p=GENERATION_CONFIG_BASE["top_p"],
-            top_k=GENERATION_CONFIG_BASE["top_k"],
-            max_output_tokens=GENERATION_CONFIG_BASE["max_output_tokens"],
-            response_mime_type=GENERATION_CONFIG_BASE["response_mime_type"],
-            response_schema=self.response_schema,
-            system_instruction=system_instruction,
-            safety_settings=self.safety_settings,
-        )
 
     def _get_movements_from_file(self):
         """Legge i movements dal file movements.json"""
@@ -183,32 +154,37 @@ class GeminiChatAPI:
             self.logger.log_error(f"Errore nel caricamento della actions map: {e}")
             return {}
 
+    def _get_technical_instructions(self):
+        """Genera le istruzioni tecniche formattate con la lista delle azioni"""
+        # Prepara la lista delle azioni per il prompt
+        actions_list_str = "\n".join(f"- {key}" for key in self.actions_map.keys())
+        
+        # Completa istruzioni tecniche iniettando la lista delle chiavi delle action
+        # Usa replace perché il testo contiene JSON con parentesi graffe
+        return TECHNICAL_INSTRUCTIONS.replace("{actions_list}", actions_list_str)
+
     def _load_ai_personality(self):
         """Carica la personalità del robot AI dal file .env"""
         config_file = os.getenv('DEFAULT_PROMPT_AI', "ai_prompts.example_system")
         
-        if not config_file:
-            self.logger.log_warning("Nessuna configurazione AI specificata, uso default")
-            return ERROR_PERSONALITY
+        personality = ERROR_PERSONALITY
+        if config_file:
+            try:
+                config_module = importlib.import_module(config_file)
+                loaded_personality = getattr(config_module, 'AI_PERSONALITY', None)
+                if loaded_personality:
+                    personality = loaded_personality
+                else:
+                    self.logger.log_warning(f"AI_PERSONALITY non trovata in '{config_file}'")
+            except ImportError as e:
+                self.logger.log_error(f"File di configurazione '{config_file}' non trovato: {e}")
+            except Exception as e:
+                self.logger.log_error(f"Errore nel caricamento della personalità AI: {e}")
         
-        try:
-            config_module = importlib.import_module(config_file)
-            personality = getattr(config_module, 'AI_PERSONALITY', None)
-            
-            if personality is None:
-                self.logger.log_warning(f"AI_PERSONALITY non trovata in '{config_file}'")
-                personality = ERROR_PERSONALITY
-                    
-            # FUSIONE: Unisce la personalità base con le istruzioni tecniche
-            full_personality = personality + "\n" + TECHNICAL_INSTRUCTIONS
-            return full_personality
-            
-        except ImportError as e:
-            self.logger.log_error(f"File di configurazione '{config_file}' non trovato: {e}")
-            return ERROR_PERSONALITY
-        except Exception as e:
-            self.logger.log_error(f"Errore nel caricamento della personalità AI: {e}")
-            return ERROR_PERSONALITY
+        # FUSIONE: Unisce la personalità (caricata o default) con le istruzioni tecniche formattate
+        # Questo avviene SEMPRE, garantendo che le technical instructions siano presenti
+        full_personality = personality + "\n" + self._get_technical_instructions()
+        return full_personality
 
     def _get_available_personalities(self):
         """
@@ -255,8 +231,8 @@ class GeminiChatAPI:
                 self.logger.log_warning(f"AI_PERSONALITY non trovata in '{module_name}'")
                 return ERROR_PERSONALITY
             
-            # FUSIONE: Unisce la personalità specifica con le istruzioni tecniche
-            return personality + "\n" + TECHNICAL_INSTRUCTIONS
+            # FUSIONE: Unisce la personalità specifica con le istruzioni tecniche formattate
+            return personality + "\n" + self._get_technical_instructions()
 
         except ImportError as e:
             self.logger.log_error(f"Modulo personalità '{module_name}' non trovato: {e}")
@@ -264,6 +240,43 @@ class GeminiChatAPI:
         except Exception as e:
             self.logger.log_error(f"Errore nel caricamento personalità '{personality_name}': {e}")
             return None
+
+    def _load_api_keys(self):
+        """
+        Carica le API keys dal file .env supportando chiavi multiple separate da virgola
+        """
+        # Determina quale variabile cercare in base al modello
+        if "openrouter" in self.llm_model:
+            env_var = "OPENROUTER_API_KEY"
+        elif "gemini" in self.llm_model:
+            env_var = "GOOGLE_API_KEY" # o GEMINI_API_KEY
+        elif "gpt" in self.llm_model:
+            env_var = "OPENAI_API_KEY"
+        elif "claude" in self.llm_model:
+            env_var = "ANTHROPIC_API_KEY"
+        else:
+            # Default fallback
+            env_var = "OPENROUTER_API_KEY"
+            
+        keys_string = os.getenv(env_var, "")
+        if not keys_string:
+            self.logger.log_warning(f"Nessuna API Key trovata per {env_var}")
+            return []
+            
+        # Divide per virgola e pulisce gli spazi
+        keys = [k.strip() for k in keys_string.split(',') if k.strip()]
+        self.logger.log_info(f"Caricate {len(keys)} API keys per {env_var}")
+        return keys
+
+    def _get_next_api_key(self):
+        """Restituisce la prossima API key disponibile (Round Robin)"""
+        if not self.api_keys:
+            return None
+            
+        key = self.api_keys[self.current_key_index]
+        # Aggiorna l'indice per la prossima chiamata
+        self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
+        return key
 
     def _load_environment(self):
         """Carica le variabili d'ambiente dai file .env"""
@@ -276,70 +289,20 @@ class GeminiChatAPI:
             # Prova a caricare dal percorso corrente
             load_dotenv()
 
-    def _get_safety_settings(self):
-        """Configurazione delle impostazioni di sicurezza per Gemini"""
-        return [
-            types.SafetySetting(
-                category="HARM_CATEGORY_HATE_SPEECH",
-                threshold="BLOCK_MEDIUM_AND_ABOVE"
-            ),
-            types.SafetySetting(
-                category="HARM_CATEGORY_HARASSMENT",
-                threshold="BLOCK_MEDIUM_AND_ABOVE"
-            ),
-            types.SafetySetting(
-                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                threshold="BLOCK_MEDIUM_AND_ABOVE"
-            ),
-            types.SafetySetting(
-                category="HARM_CATEGORY_DANGEROUS_CONTENT",
-                threshold="BLOCK_MEDIUM_AND_ABOVE"
-            ),
-        ]
-
-    def _process_model_response(self, response, chat_id):
+    def _process_model_response(self, response_text, chat_id):
         """Processa la risposta del modello estraendo e processando i chunks
         Args: 
-            response -> La risposta dal modello Gemini
+            response_text -> La risposta testuale dal modello (stringa JSON)
             chat_id  -> ID della chat corrente
         Returns: 
             Tuple (success, result) dove result è il dizionario con i chunks o il messaggio di errore
         """
         try:
-            # Verifica che ci siano candidati
-            if not response.candidates:
-                self.logger.log_error("Risposta da Gemini senza candidati")
-                return False, {
-                    "error": "Risposta non valida dal modello: nessun candidato.",
-                    "status_code": 500
-                }
-            
-            # Ottieni il primo candidato valido
-            first_candidate = response.candidates[0]
-            
-            # Verifica che il candidato abbia contenuto
-            if not hasattr(first_candidate, 'content') or not first_candidate.content.parts:
-                self.logger.log_error("Candidato senza contenuto valido")
-                return False, {
-                    "error": "Risposta non valida dal modello: contenuto mancante.",
-                    "status_code": 500
-                }
-            
-            response_text = first_candidate.content.parts[0].text
-            
-        except (AttributeError, IndexError) as e:
-            self.logger.log_error(f"Struttura della risposta inattesa: {e}")
-            return False, {
-                "error": "Risposta non valida dal modello: struttura inattesa.",
-                "status_code": 500
-            }
-
-        try:
             # Rimuove eventuali blocchi di codice Markdown dal JSON generato da LLM
-            cleaned_json_string=clean_markdown(response_text)
+            cleaned_json_string = clean_markdown(response_text)
             # Esegui il parsing del JSON sulla stringa pulita
             response_data = json.loads(cleaned_json_string)
-            #self.logger.log_info(f"Debug JSON: {response_data}")
+            
             chunks = response_data.get("chunks", [])
             
             # --- TRADUZIONE AZIONE ---
@@ -390,18 +353,6 @@ class GeminiChatAPI:
         """
         Rileva se il messaggio è un comando di cambio personalità
         Richiede sempre il prefisso "Comando di sistema" seguito da varianti linguistiche
-
-        Esempi supportati:
-        - "Comando di sistema ora sarai dante"
-        - "Comando di sistema diventa dante"
-        - "Comando di sistema comportati come dante"
-        - "Comando di sistema cambia personalità in dante"
-        - "Comando di sistema attiva personalità dante"
-
-        Args:
-            message: Il messaggio dell'utente
-        Returns:
-            tuple: (is_command, personality_name) dove is_command è True se è un comando
         """
         # Lista di pattern supportati (tutti richiedono "comando di sistema" come prefisso)
         patterns = [
@@ -470,31 +421,18 @@ class GeminiChatAPI:
 
         return True, f"OK cambio personalità effettuato in {personality_name}"
 
-    def _get_generation_config_for_chat(self, chat_id):
+    def _get_system_instruction_for_chat(self, chat_id):
         """
-        Crea una configurazione di generazione personalizzata per una chat specifica
-        Se la chat ha una personalità custom, usa quella, altrimenti usa quella di default
-        Args:
-            chat_id: ID della chat
-        Returns:
-            GenerateContentConfig: Configurazione personalizzata per la chat
+        Recupera la system instruction per una chat specifica
         """
-        # Controlla se la chat ha una personalità personalizzata
         if chat_id in self.chat_personalities:
             personality_name = self.chat_personalities[chat_id]
             personality_text = self._load_personality_by_name(personality_name)
 
             if personality_text:
-                custom_system_instruction = SYSTEM_PROMPT_BASE + personality_text
-            else:
-                # Fallback alla configurazione di default
-                custom_system_instruction = self.system_instruction
-        else:
-            # Usa la configurazione di default
-            custom_system_instruction = self.system_instruction
-
-        # Crea una nuova configurazione con la personalità personalizzata
-        return self._create_generation_config(custom_system_instruction)
+                return SYSTEM_PROMPT_BASE + personality_text
+        
+        return self.system_instruction
 
     def handle_talk_action(self, data):
         """Gestisce l'azione di conversazione (talk)
@@ -558,30 +496,44 @@ class GeminiChatAPI:
                     "personality_changed": success
                 }), 200
 
-            # Aggiungi il messaggio dell'utente alla cronologia
-            user_message = types.Content(
-                role="user",
-                parts=[types.Part(text=message)]
-            )
-            chat_history.append(user_message)
-
-            # Usa la configurazione personalizzata per questa chat (se presente)
-            chat_config = self._get_generation_config_for_chat(chat_id)
+            # Recupera la system instruction corretta
+            system_instruction = self._get_system_instruction_for_chat(chat_id)
             
-            # Invia il messaggio usando la configurazione (personalizzata o default)
-            response = self.client.models.generate_content(
-                model=self.gemini_model,
-                contents=chat_history,
-                config=chat_config
+            # Costruiamo il messaggio utente
+            current_user_message = {"role": "user", "content": message}
+
+            # Limita la history PASSATA agli ultimi 20 messaggi (10 scambi)
+            # Facciamo lo slice PRIMA per garantire che il messaggio corrente sia sempre incluso
+            max_past_messages = 20
+            past_history_limited = chat_history[-max_past_messages:]
+            
+            # Prepara i messaggi per LiteLLM (System + Past History + Current Message)
+            messages = [{"role": "system", "content": system_instruction}] + past_history_limited + [current_user_message]
+
+            # Aggiungi il messaggio dell'utente alla cronologia COMPLETA (persistenza)
+            chat_history.append(current_user_message)
+
+            # Invia il messaggio usando LiteLLM
+            # Ottieni la chiave per questa richiesta
+            current_api_key = self._get_next_api_key()
+            
+            response = completion(
+                model=self.llm_model,
+                messages=messages,
+                api_key=current_api_key, # Passa esplicitamente la chiave ruotata
+                response_format={"type": "json_object"}, # Forza output JSON
+                temperature=GENERATION_CONFIG_BASE["temperature"],
+                top_p=GENERATION_CONFIG_BASE["top_p"],
+                max_tokens=GENERATION_CONFIG_BASE["max_output_tokens"]
             )
+            
+            response_text = response.choices[0].message.content
             
             # Aggiunge la risposta del modello alla cronologia
-            if response.candidates and response.candidates[0].content:
-                model_content = response.candidates[0].content
-                chat_history.append(model_content)
+            chat_history.append({"role": "assistant", "content": response_text})
             
             # Processa la risposta
-            success, result = self._process_model_response(response, chat_id)
+            success, result = self._process_model_response(response_text, chat_id)
             
             if success:
                 return jsonify({
@@ -639,23 +591,10 @@ class GeminiChatAPI:
 
         if chat_id in self.active_chats:
             chat_history = self.active_chats[chat_id]
-            history = []
-            
-            for message in chat_history:
-                if hasattr(message, 'role') and hasattr(message, 'parts'):
-                    # Gestisci messaggi con struttura corretta
-                    text_content = ""
-                    if message.parts and len(message.parts) > 0:
-                        text_content = getattr(message.parts[0], 'text', '')
-                    
-                    history.append({
-                        "role": message.role,
-                        "content": text_content
-                    })
-            
+            # La history è già nel formato corretto [{"role":..., "content":...}]
             return jsonify({
                 "chat_id": chat_id,
-                "history": history,
+                "history": chat_history,
                 "success": True
             }), 200
         
@@ -670,16 +609,11 @@ class GeminiChatAPI:
         
         for chat_id, chat_history in self.active_chats.items():
             for message in chat_history:
-                if hasattr(message, 'role') and hasattr(message, 'parts'):
-                    text_content = ""
-                    if message.parts and len(message.parts) > 0:
-                        text_content = getattr(message.parts[0], 'text', '')
-                    
-                    full_history.append({
-                        "chat_id": chat_id,
-                        "role": message.role,
-                        "content": text_content,
-                    })
+                full_history.append({
+                    "chat_id": chat_id,
+                    "role": message["role"],
+                    "content": message["content"],
+                })
 
         return jsonify({
             "full_history": full_history,
