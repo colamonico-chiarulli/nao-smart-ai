@@ -3,14 +3,14 @@ File:	/web_api/utils/llm_chat_api.py
 -----
 Classe LLMChatAPI - per gestire le interazioni API con vari LLM tramite LiteLLM
 Le diverse azioni sono specificate nel campo action del JSON inviato.
-/gemini/chat  azioni: talk, end, hystory
-/gemini/admin azioni: list-chats, delete-chats
+api-url/chat  azioni: talk, end, hystory
+api-url/admin azioni: list-chats, delete-chats
 ------
 @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	December 11th 2025 10:30:00 am
+Last Modified: 	December 13th 2025 07:49:59 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -163,8 +163,8 @@ class LLMChatAPI:
         # Prepara la lista delle azioni per il prompt
         actions_list_str = "\n".join(f"- {key}" for key in self.actions_map.keys())
         
-        # Formatta le istruzioni tecniche iniettando la lista
-        # Usa replace invece di format perché il testo contiene JSON con parentesi graffe
+        # Completa istruzioni tecniche iniettando la lista delle chiavi delle action
+        # Usa replace perché il testo contiene JSON con parentesi graffe
         return TECHNICAL_INSTRUCTIONS.replace("{actions_list}", actions_list_str)
 
     def _load_ai_personality(self):
@@ -500,38 +500,36 @@ class LLMChatAPI:
                     "personality_changed": success
                 }), 200
 
-            # Aggiungi il messaggio dell'utente alla cronologia
-            chat_history.append({"role": "user", "content": message})
-
             # Recupera la system instruction corretta
             system_instruction = self._get_system_instruction_for_chat(chat_id)
             
-            # Prepara i messaggi per LiteLLM (System + History)
-            messages = [{"role": "system", "content": system_instruction}] + chat_history
+            # Costruiamo il messaggio utente
+            current_user_message = {"role": "user", "content": message}
 
-            #debug
-            print(f"SYSTEM INSTRUCTION SAMPLE:\n{system_instruction[:200]}...\n")
-            print(f"MESSAGES SENT:\n{json.dumps(messages, indent=2)}")
+            # Limita la history PASSATA agli ultimi 20 messaggi (10 scambi)
+            # Facciamo lo slice PRIMA per garantire che il messaggio corrente sia sempre incluso
+            max_past_messages = 20
+            past_history_limited = chat_history[-max_past_messages:]
+            
+            # Prepara i messaggi per LiteLLM (System + Past History + Current Message)
+            messages = [{"role": "system", "content": system_instruction}] + past_history_limited + [current_user_message]
+
+            # Aggiungi il messaggio dell'utente alla cronologia COMPLETA (persistenza)
+            chat_history.append(current_user_message)
 
             # Invia il messaggio usando LiteLLM
-            try:
-                # Ottieni la chiave per questa richiesta
-                current_api_key = self._get_next_api_key()
-                
-                response = completion(
-                    model=self.llm_model,
-                    messages=messages,
-                    api_key=current_api_key, # Passa esplicitamente la chiave ruotata
-                    response_format={"type": "json_object"}, # Forza output JSON
-                    temperature=GENERATION_CONFIG_BASE["temperature"],
-                    top_p=GENERATION_CONFIG_BASE["top_p"],
-                    max_tokens=GENERATION_CONFIG_BASE["max_output_tokens"]
-                )
-            except Exception as e:
-                print(f"DEBUG: LiteLLM Error Details: {e}")
-                import traceback
-                traceback.print_exc()
-                raise e
+            # Ottieni la chiave per questa richiesta
+            current_api_key = self._get_next_api_key()
+            
+            response = completion(
+                model=self.llm_model,
+                messages=messages,
+                api_key=current_api_key, # Passa esplicitamente la chiave ruotata
+                response_format={"type": "json_object"}, # Forza output JSON
+                temperature=GENERATION_CONFIG_BASE["temperature"],
+                top_p=GENERATION_CONFIG_BASE["top_p"],
+                max_tokens=GENERATION_CONFIG_BASE["max_output_tokens"]
+            )
             
             response_text = response.choices[0].message.content
             
