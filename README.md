@@ -4,13 +4,13 @@
 > che conversa, comprende e si emoziona 
 
 [![License: AGPLv3](https://img.shields.io/badge/License-AGPLv3.0-green.svg)](https://opensource.org/license/agpl-v3)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![NAO Robot](https://img.shields.io/badge/NAO-Robot%206-red.svg)](https://www.aldebaran.com/en/nao)
-[![Google Gemini](https://img.shields.io/badge/Google-Gemini%20AI-brightgreen.svg)](https://ai.google.dev/)
+[![Any AI Models](https://img.shields.io/badge/LiteLLM%20AI%20Models-brightgreen.svg)](https://docs.litellm.ai/docs/providers)
 
 ## 📖 Descrizione
 
-**NAO Smart AI** è un progetto innovativo che trasforma il robot NAO 6 in un robot sociale intelligente, connettendolo ai servizi cloud di Google Gemini per creare conversazioni naturali ed empatiche. 
+**NAO Smart AI** è un progetto innovativo che trasforma il robot NAO 6 in un robot sociale intelligente, connettendolo all'Intelligenza Artificiale per creare conversazioni naturali ed empatiche. 
 
 Il sistema supera i limiti delle risposte predefinite, offrendo:
 - 🗣️ **Dialoghi naturali dinamici** generati in tempo reale
@@ -18,14 +18,13 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - 🎯 **Personalità adattive di AI** multiple e attivabili tramite comandi vocali
 - 🔄 **Autonomia completa** - serve solo una connessione WiFi ad Internet
 - 🎪 **Controllo completamente vocale** - nessun PC da collegare a NAO
-- 🔈**Riconoscimento Audio potenziato** - Con nuovo STT su server 
-- 🎬 **Animazioni personalizzate con AI** - Possibilita per AI di scegliere in base al dialogo 
-di avviare "un'azione" (ballare, suonare, ecc) da una libreria predefinita
+- 🔈**Riconoscimento Audio potenziato** - Con nuovo STT vosk su server 
+- 🎬 **Animazioni personalizzate con AI** - Possibilita per AI di scegliere in base al dialogo di avviare "un'azione" (ballare, suonare, ecc) da una libreria personale
 
 ## ✨ Caratteristiche principali
 
 ### 🧠 Intelligenza Artificiale Avanzata
-- Integrazione completa con **Google Gemini** per conversazioni contestuali
+- Integrazione completa con qualsiasi LLM (Google,Openai, Antropic, ecc) gestito da **liteLLM** (Agnostic LLM) per conversazioni contestuali
 - Analisi semantica in tempo reale per riconoscimento emotivo delle risposte
 - Generazione dinamica di risposte personalizzate
 
@@ -41,7 +40,7 @@ di avviare "un'azione" (ballare, suonare, ecc) da una libreria predefinita
 - Log dei dialoghi per analisi e miglioramento prompt AI
 
 ### 🌐 Architettura Scalabile
-- **Web API cloud** sviluppata in Python 3.13
+- **Web API Server** sviluppata in Python 3.13
 - Gestione simultanea di più robot NAO
 - Conservazione della cronologia dei dialoghi
 
@@ -50,38 +49,39 @@ di avviare "un'azione" (ballare, suonare, ecc) da una libreria predefinita
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │                 │    │                  │    │                 │
-│   Robot NAO     │◄──►│   Web API Cloud  │◄──►│  Google Gemini  │
-│  (Python 2.7)   │    │  (Python 3.11)   │    │      AI         │
+│   Robot NAO     │◄──►│  Web API Server  │◄──►│   Any AI LLM    │
+│  (Python 2.7)   │    │  (Python 3.13)   │    │                 │
 │                 │    │                  │    │                 │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
 ### Componenti
-1. **Client NAO** (Python 2.7 + Choregraphe) - NON FORNITO
+1. **🤖 Client NAO** (Python 2.7 + Choregraphe)
+   - **Licenza Proprietaria ma gratuito per NO-Profit** [vedi Licenze](#-licenze)
    - Gestione interfaccia utente sul robot
    - Comunicazione con Web API
    - Controllo movimenti e audio
    - Invio audio
 
-2. **Web API Cloud** (Python 3.11)
+2. **🌐 Web API Server (Cloud)** (Python 3.13)
    - Riconoscimento audio STT
-   - Bridge tra NAO e Google Gemini
+   - Bridge tra NAO e Modelli AI - LLM 
    - Gestione personalità multiple
    - Elaborazione emotiva e storia dialoghi
 
-
-3. **Integrazione Google Gemini**
-   - Generazione dialoghi naturali
+3. **🧠 Integrazione Intelligenza Artificiale**
+   - Generazione dialoghi naturali con la personalità scelta
    - Analisi semantica ed emotiva
    - Risposte contestualizzate
-
+   - Associazioni di movimenti empatici
+   - Scelta di animazioni personalizzate
+   
 ## 🚀 Installazione e Setup
 
 ### Prerequisiti
 - Robot NAO 6 con NAOqi OS
 - Choregraphe Suite per sviluppo
-- Server cloud con Python 3.11+
-- Account Google AI Platform
+- Server cloud con Python 3.13+
 
 ### 1. Setup Web API
 ```bash
@@ -99,6 +99,10 @@ cp .env.example .env
 # Configurazione libreria movimenti
 cp movements.example.json movements.json
 # Editare movements.json con i movimenti di NAO che si vogliono gestire
+# Configurazione libreria animazioni personalizzate
+# Editare i file json con le azioni e le descrizioni si vogliono gestire con AI
+cp actions.example.json actions.json
+cp action_map.example.json action_map.json
 ```
 
 ### 2. Deploy su Cloud
@@ -158,9 +162,9 @@ nao-smart-ai/
 
 Progetto sviluppato da:
 - **Docenti** : Rino Andriano e Gargano Vito Trifone
-- **Presso**  : IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA)
+- **In servizio presso**  : IISS "C. Colamonico - N. Chiarulli" - Acquaviva delle Fonti (BA)
 
-Iniziative Didattiche (progettazione, manutenzione e sviluppo) 
+Iniziative Didattiche correlate a questo progetto
 - **Studenti**: Studenti delle Classi 3ª, 4ª e 5ª Informatica e Telecomunicazioni
 - **Percorso**: PNRR D.M. 65 "*AI Smart Bots: Assistenti Virtuali Avanzati*" a.s. 2024-25
 - **Percorso**: PTOF "*NAO Smart AI - Developers Team*" a.s. 2025-26
@@ -171,15 +175,27 @@ Iniziative Didattiche (progettazione, manutenzione e sviluppo)
  - il 14 novembre 2025 - **NAO Smart AI** è stato premiato, classificandosi al **primo posto** del concorso nazionale [**Premio Imprendi - Innovation Champions 2025**](https://www.imprendi.org/premi/#premio-imprendi-innovazione) della Fondazione Imprendi di Padova
 ---
 
->  ## 📪 Contatti e supporto
-Nel caso **NAO Smart AI** sia adottato da qualche scuola, ospedali o altri enti con finalità sociali è gradita la segnalazione scrivendo a [nao@colamonicochiarulli.edu.it](mailto:nao@colamonicochiarulli.edu.it).
+## 📜 Licenze 
 
-Alla stessa mail è possibile scrivere per richieste di supporto.
+### Architettura Dual-License
 
----
-**NAO Smart AI** - *Rende la robotica sociale intelligente, empatica e accessibile* 🤖❤️
+NAO Smart AI adotta un modello di licensing duale:
 
-## 📜 Licenza
+#### 🌐 Server Web API (AGPL-3.0)
+Il componente server è rilasciato sotto **GNU AGPL-3.0**.
+Questo garantisce che miglioramenti al **core** rimangano 
+aperti e disponibili alla comunità.
+
+#### 🤖 Client NAO (Licenza Proprietaria)
+Il componente client per robot NAO è rilasciato sotto 
+**licenza proprietaria con uso gratuito** per:
+- Ospedali e strutture sanitarie pubbliche
+- Centri Alzheimer
+- Fondazioni ed enti no-profit con finalità sociali
+- Università per fini di ricerca
+- Scuole dotate di NAO con accordi documentati con gli enti sopra elencati per finalità sociali no-profit
+
+### 📜 Licenza per Server Web API (AGPL-3.0) 
 
 Questo progetto è rilasciato sotto **licenza GNU Affero General Public License version 3** - vedi il file [LICENSE](LICENSE) per i dettagli.
 
@@ -318,3 +334,17 @@ d) Warrant that their contributions are original or properly licensed
 
 Contributors retain copyright on their specific contributions and 
 will be acknowledged in the AUTHORS or CONTRIBUTORS file.
+
+>  ## 📪 Contatti e Supporto
+
+### 🤖 Licenza Client NAO - Enti Sociali (gratuita)
+Ospedali, centri Alzheimer, fondazioni, enti no-profit, università e scuole con NAO che rientrano nei casi di **uso gratuito** possono richiedere il client scrivendo a [nao@colamonicochiarulli.edu.it](mailto:nao@colamonicochiarulli.edu.it)  
+indicando: ente, finalità di utilizzo e referente tecnico.
+
+### ✉️ Supporto Generale
+Per qualsiasi altra richiesta di informazioni sul progetto:  
+[nao@colamonicochiarulli.edu.it](mailto:nao@colamonicochiarulli.edu.it)
+
+
+---
+**NAO Smart AI** - *Rende la robotica sociale intelligente, empatica e accessibile* 🤖❤️
