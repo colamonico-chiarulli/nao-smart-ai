@@ -3,10 +3,9 @@ Flask_Cors
 helpers
 protobuf
 python-dotenv
-google-genai
+Unidecode
 gunicorn
+litellm
 vosk
-gunicorn
 pydub
 audioop-lts
-litellm
