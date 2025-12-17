@@ -1,0 +1,7 @@
+# Rinomina questo file in .htaccess se non già presente e 
+# Assicurati che il modulo mod_rewrite sia abilitato e che AllowOverride All
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
