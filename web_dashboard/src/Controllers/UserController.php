@@ -219,7 +219,25 @@ class UserController
         if (!$id)
             die("Invalid ID");
         $user = $this->userModel->getById($id);
-        View::render('user/delete', ['user' => $user]);
+        if (!$user)
+            die("User not found");
+
+        // Verifica se l'utente è admin e se è l'ultimo
+        $canDelete = true;
+        $deleteError = '';
+        if ($user['role'] === 'admin') {
+            $adminCount = $this->userModel->countAdmins();
+            if ($adminCount <= 1) {
+                $canDelete = false;
+                $deleteError = 'Impossibile eliminare l\'ultimo utente admin del sistema.';
+            }
+        }
+
+        View::render('user/delete', [
+            'user' => $user,
+            'canDelete' => $canDelete,
+            'deleteError' => $deleteError
+        ]);
     }
 
     /*
@@ -230,7 +248,24 @@ class UserController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!verify_csrf_token())
                 die("CSRF Invalid");
+            
             $id = $_POST['id'];
+            $user = $this->userModel->getById($id);
+            
+            // Verifica se l'utente è admin e se è l'ultimo
+            if ($user && $user['role'] === 'admin') {
+                $adminCount = $this->userModel->countAdmins();
+                if ($adminCount <= 1) {
+                    // Non permettere l'eliminazione dell'ultimo admin
+                    View::render('user/delete', [
+                        'user' => $user,
+                        'canDelete' => false,
+                        'deleteError' => 'Impossibile eliminare l\'ultimo utente admin del sistema.'
+                    ]);
+                    return;
+                }
+            }
+            
             $this->userModel->delete($id);
             Router::redirect('users');
             exit;

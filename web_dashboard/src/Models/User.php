@@ -235,4 +235,18 @@ class User
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
+
+    /**
+     * Conta il numero di utenti con ruolo admin.
+     * 
+     * @return int Numero di admin.
+     */
+    public function countAdmins(): int
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM users WHERE role = 'admin'");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return (int) $row['total'];
+    }
 }

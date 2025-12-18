@@ -103,16 +103,19 @@ function url(string $path = ''): string
     $path = ltrim($path, '/');
 
     // Ottieni il base path dallo script name
-    // es. /~rino/CorsoPHP/.../public/index.php -> /~rino/CorsoPHP/.../public
+    // es. /public_html/nao-smart-ai/public/index.php -> /public_html/nao-smart-ai/public
     $basePath = dirname($_SERVER['SCRIPT_NAME']);
 
     // Normalizza su Windows/Unix
     $basePath = str_replace('\\', '/', $basePath);
 
-    // Rimuovi slash finale se presente (tranne se è root)
-    if ($basePath !== '/') {
-        $basePath = rtrim($basePath, '/');
+    // Se il basePath è la root, restituisci direttamente il path con un solo slash
+    if ($basePath === '/' || $basePath === '') {
+        return '/' . $path;
     }
+
+    // Rimuovi slash finale se presente
+    $basePath = rtrim($basePath, '/');
 
     return $basePath . '/' . $path;
 }

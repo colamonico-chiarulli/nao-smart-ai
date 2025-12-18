@@ -36,19 +36,30 @@
  * ------------------------------------------------------------------------------
  */
 
-// Variabili: $user
+// Variabili: $user, $canDelete, $deleteError
+$canDelete = $canDelete ?? true;
+$deleteError = $deleteError ?? '';
 ?>
-<div class="alert alert-warning">
-    <h4>Sei sicuro di voler cancellare questo utente?</h4>
+<div class="alert <?= $canDelete ? 'alert-warning' : 'alert-danger' ?>">
+    <?php if (!$canDelete): ?>
+        <h4><i class="bi bi-exclamation-triangle-fill me-2"></i>Operazione non consentita</h4>
+        <p class="mb-3"><?= h($deleteError) ?></p>
+        <hr>
+    <?php endif; ?>
+    
+    <h4><?= $canDelete ? 'Sei sicuro di voler cancellare questo utente?' : 'Dettagli utente:' ?></h4>
     <p>
         <strong><?= h($user['last_name']) ?> <?= h($user['first_name']) ?></strong><br>
-        <?= h($user['email']) ?>
+        <?= h($user['email']) ?><br>
+        <span class="badge bg-<?= $user['role'] === 'admin' ? 'danger' : 'secondary' ?>"><?= h($user['role']) ?></span>
     </p>
 
     <form method="post" action="destroy">
         <?= csrf_field() ?>
         <input type="hidden" name="id" value="<?= h($user['id']) ?>">
-        <a href="index" class="btn btn-secondary">Annulla</a>
-        <button type="submit" class="btn btn-danger">Conferma Cancellazione</button>
+        <a href="index" class="btn btn-secondary">Torna all'elenco</a>
+        <?php if ($canDelete): ?>
+            <button type="submit" class="btn btn-danger">Conferma Cancellazione</button>
+        <?php endif; ?>
     </form>
 </div>
