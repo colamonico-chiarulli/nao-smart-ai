@@ -106,7 +106,7 @@
         </div>
     </header>
 
-    <main class="main" style="padding-top: 90px; min-height: calc(100vh - 90px);">
+    <main class="main" style="padding-top: 100px; min-height: calc(100vh - 100px);">
         <div class="container">
             <div class="row">
                 <div class="col">
