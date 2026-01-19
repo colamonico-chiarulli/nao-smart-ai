@@ -10,6 +10,8 @@ web_api/utils/actions_map.json
 web_api/models/*
 !web_api/models/.gitkeep
 
+#draft and old files
+old_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
