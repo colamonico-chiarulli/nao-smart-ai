@@ -81,6 +81,54 @@
         </div>
 
       </div>
+        
+      <div class="row stats-row gy-4 mt-5" data-aos="fade-up" data-aos-delay="500">
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="bi bi-trophy"></i>
+            </div>
+            <div class="stat-content">
+              <h4>2 Centri pilota</h4>
+              <p class="mb-0">Alzheimer e centro educativo</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="bi bi-award"></i>
+            </div>
+            <div class="stat-content">
+              <h4>1° Premio</h4>
+              <p class="mb-0">Innovation Champions 2025</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="stat-content">
+              <h4>Multi Ruolo</h4>
+              <p class="mb-0">Personalità adattabili</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="bi bi-github"></i>
+            </div>
+            <div class="stat-content">
+              <h4>Open Source</h4>
+              <p class="mb-0">Codice disponibile su GitHub</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
   <!-- End Hero Section -->
@@ -138,46 +186,7 @@
     </section>
     <!-- End About Section -->
 
-    <!-- ======= Stats Section ======= -->
-    <!-- ======= Stats Section ======= -->
-    <section id="stats" class="stats section">
-      <div class="container" data-aos="fade-up">
 
-        <div class="row gy-4">
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="2" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Centri pilota già coinvolti (Alzheimer e centro socio-educativo)</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="1" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Premio Imprendi – Innovation Champions 2025</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span class="purecounter">Multi</span>
-              <p>Personalità configurabili per diversi contesti</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span class="purecounter">Open</span>
-              <p>Codice sorgente disponibile su GitHub</p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </section>
-    <!-- End Stats Section -->
 
 
     <section id="services" class="features section light-background">
@@ -375,21 +384,60 @@
     </section>
     <!-- End Features Section -->
 
-    <!-- ======= Call To Action Section (opzionale) ======= -->
-    <section id="cta" class="cta section">
-      <div class="container" data-aos="zoom-in">
+    <!-- ======= Call To Action Section ======= -->
+    <section id="call-to-action" class="call-to-action section dark-background">
 
-        <div class="row gy-4">
-          <div class="col-lg-9 text-center text-lg-start">
-            <h3>Vuoi sperimentare NAO Smart AI nella tua struttura?</h3>
-            <p>È possibile attivare progetti pilota in reparti pediatrici, centri educativi e strutture per anziani, con supporto alla formazione del personale.</p>
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row content justify-content-center align-items-center position-relative">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-4 mb-4">Vuoi sperimentare NAO Smart AI nella tua struttura?</h2>
+            <p class="mb-4">È possibile attivare progetti pilota in reparti pediatrici, centri educativi e strutture per anziani, con supporto alla formazione del personale.</p>
+            <a href="#contact" class="btn btn-cta">Richiedi una demo</a>
           </div>
-          <div class="col-lg-3 cta-btn-container text-center">
-            <a class="cta-btn align-middle scrollto" href="#contact">Richiedi una demo</a>
+
+          <!-- Abstract Background Elements -->
+          <div class="shape shape-1">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <path d="M47.1,-57.1C59.9,-45.6,68.5,-28.9,71.4,-10.9C74.2,7.1,71.3,26.3,61.5,41.1C51.7,55.9,35,66.2,16.9,69.2C-1.3,72.2,-21,67.8,-36.9,57.9C-52.8,48,-64.9,32.6,-69.1,15.1C-73.3,-2.4,-69.5,-22,-59.4,-37.1C-49.3,-52.2,-32.8,-62.9,-15.7,-64.9C1.5,-67,34.3,-68.5,47.1,-57.1Z" transform="translate(100 100)"></path>
+            </svg>
           </div>
+
+          <div class="shape shape-2">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <path d="M41.3,-49.1C54.4,-39.3,66.6,-27.2,71.1,-12.1C75.6,3,72.4,20.9,63.3,34.4C54.2,47.9,39.2,56.9,23.2,62.3C7.1,67.7,-10,69.4,-24.8,64.1C-39.7,58.8,-52.3,46.5,-60.1,31.5C-67.9,16.4,-70.9,-1.4,-66.3,-16.6C-61.8,-31.8,-49.7,-44.3,-36.3,-54C-22.9,-63.7,-8.2,-70.6,3.6,-75.1C15.4,-79.6,28.2,-58.9,41.3,-49.1Z" transform="translate(100 100)"></path>
+            </svg>
+          </div>
+
+          <!-- Dot Pattern Groups -->
+          <div class="dots dots-1">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="dot-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="2" fill="currentColor"></circle>
+              </pattern>
+              <rect width="100" height="100" fill="url(#dot-pattern)"></rect>
+            </svg>
+          </div>
+
+          <div class="dots dots-2">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="dot-pattern-2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="2" fill="currentColor"></circle>
+              </pattern>
+              <rect width="100" height="100" fill="url(#dot-pattern-2)"></rect>
+            </svg>
+          </div>
+
+          <div class="shape shape-3">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <path d="M43.3,-57.1C57.4,-46.5,71.1,-32.6,75.3,-16.2C79.5,0.2,74.2,19.1,65.1,35.3C56,51.5,43.1,65,27.4,71.7C11.7,78.4,-6.8,78.3,-23.9,72.4C-41,66.5,-56.7,54.8,-65.4,39.2C-74.1,23.6,-75.8,4,-71.7,-13.2C-67.6,-30.4,-57.7,-45.2,-44.3,-56.1C-30.9,-67,-15.5,-74,0.7,-74.9C16.8,-75.8,33.7,-70.7,43.3,-57.1Z" transform="translate(100 100)"></path>
+            </svg>
+          </div>
+
         </div>
 
       </div>
+
     </section>
     <!-- End Call To Action Section -->
 
@@ -441,52 +489,104 @@
           <p>NAO Smart AI è un progetto a forte impatto sociale: il software è open source, le modalità economiche dipendono dal contesto e dalle dotazioni già presenti.</p>
         </div>
 
-        <div class="row gy-4" data-aos="fade-left">
+        <div class="row g-4 justify-content-center">
 
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-            <div class="box">
+          <!-- Pilota in struttura -->
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="pricing-card">
               <h3>Pilota in struttura</h3>
-              <h4><span>Progetto sperimentale</span></h4>
-              <ul>
-                <li>Attivazione di NAO Smart AI in uno o più reparti/centri.</li>
-                <li>Formazione iniziale al personale.</li>
-                <li>Co-progettazione delle attività.</li>
-                <li>Valutazione con feedback di utenti e operatori.</li>
+              <p class="description">Progetto sperimentale</p>
+
+              <h4>Cosa include:</h4>
+              <ul class="features-list">
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Attivazione NAO Smart AI in reparti/centri
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Formazione iniziale al personale
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Co-progettazione delle attività
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Valutazione con feedback utenti
+                </li>
               </ul>
-              <div class="btn-wrap">
-                <a href="#contact" class="btn-buy scrollto">Proponi un pilota</a>
-              </div>
+
+              <a href="#contact" class="btn btn-primary">
+                  Proponi un pilota
+                  <i class="bi bi-arrow-right"></i>
+              </a>
             </div>
           </div>
 
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
-            <div class="box featured">
+          <!-- Integrazione in struttura (Popular) -->
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="pricing-card popular">
               <h3>Integrazione in struttura</h3>
-              <h4><span>Uso continuativo</span></h4>
-              <ul>
-                <li>NAO Smart AI integrato in attività didattiche o terapeutiche.</li>
-                <li>Supporto su personalizzazione delle personalità e dei contenuti.</li>
-                <li>Accesso agli aggiornamenti del progetto open source.</li>
-                <li>Possibile gestione multi-robot.</li>
+              <p class="description">Uso continuativo</p>
+
+              <h4>Cosa include:</h4>
+              <ul class="features-list">
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Integrazione in attività didattiche
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Supporto configurazione personalità
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Accesso aggiornamenti open source
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Possibile gestione multi-robot
+                </li>
               </ul>
-              <div class="btn-wrap">
-                <a href="#contact" class="btn-buy scrollto">Parla con il team</a>
-              </div>
+
+              <a href="#contact" class="btn btn-light">
+                  Parla con il team
+                  <i class="bi bi-arrow-right"></i>
+              </a>
             </div>
           </div>
 
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
-            <div class="box">
+          <!-- Collaborazioni e ricerca -->
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="pricing-card">
               <h3>Collaborazioni e ricerca</h3>
-              <h4><span>Progetti con università e enti</span></h4>
-              <ul>
-                <li>Progetti di ricerca clinica o educativa.</li>
-                <li>Co-sviluppo di nuove funzionalità AI e robotiche.</li>
-                <li>Partecipazione a bandi, PNRR e iniziative su salute, istruzione e innovazione.</li>
+              <p class="description">Progetti con università e enti</p>
+
+              <h4>Cosa include:</h4>
+              <ul class="features-list">
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Ricerca clinica o educativa
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Co-sviluppo nuove funzionalità
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Partecipazione a bandi e PNRR
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Innovazione su salute e istruzione
+                </li>
               </ul>
-              <div class="btn-wrap">
-                <a href="#contact" class="btn-buy scrollto">Proponi una collaborazione</a>
-              </div>
+
+              <a href="#contact" class="btn btn-primary">
+                  Proponi collaborazione
+                  <i class="bi bi-arrow-right"></i>
+              </a>
             </div>
           </div>
 
@@ -497,65 +597,65 @@
     <!-- End Pricing Section -->
 
     <!-- ======= FAQ Section (opzionale, adattato a NAO) ======= -->
-    <section id="faq" class="faq section light-background">
-      <div class="container" data-aos="fade-up">
+    <section id="faq" class="faq-9 faq section light-background">
+      <div class="container">
+        <div class="row">
 
-        <div class="section-title">
-          <h2>Domande frequenti</h2>
-          <p>Alcune risposte rapide alle domande che riceviamo più spesso da strutture sanitarie ed educative.</p>
+            <div class="col-lg-5" data-aos="fade-up">
+                <h2 class="faq-title">Domande frequenti</h2>
+                <p class="faq-description">Alcune risposte rapide alle domande che riceviamo più spesso da strutture sanitarie ed educative.</p>
+                <div class="faq-arrow d-none d-lg-block" data-aos="fade-up" data-aos-delay="200">
+                    <svg class="faq-arrow" width="200" height="211" viewBox="0 0 200 211" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M198.804 194.488C189.279 189.596 179.529 185.52 169.407 182.07L169.384 182.049C169.227 181.994 169.07 181.939 168.912 181.884C166.669 181.139 165.906 184.546 167.669 185.615C174.053 189.473 182.761 191.837 189.146 195.695C156.603 195.912 119.781 196.591 91.266 179.049C62.5221 161.368 48.1094 130.695 56.934 98.891C84.5539 98.7247 112.556 84.0176 129.508 62.667C136.396 53.9724 146.193 35.1448 129.773 30.2717C114.292 25.6624 93.7109 41.8875 83.1971 51.3147C70.1109 63.039 59.63 78.433 54.2039 95.0087C52.1221 94.9842 50.0776 94.8683 48.0703 94.6608C30.1803 92.8027 11.2197 83.6338 5.44902 65.1074C-1.88449 41.5699 14.4994 19.0183 27.9202 1.56641C28.6411 0.625793 27.2862 -0.561638 26.5419 0.358501C13.4588 16.4098 -0.221091 34.5242 0.896608 56.5659C1.8218 74.6941 14.221 87.9401 30.4121 94.2058C37.7076 97.0203 45.3454 98.5003 53.0334 98.8449C47.8679 117.532 49.2961 137.487 60.7729 155.283C87.7615 197.081 139.616 201.147 184.786 201.155L174.332 206.827C172.119 208.033 174.345 211.287 176.537 210.105C182.06 207.125 187.582 204.122 193.084 201.144C193.346 201.147 195.161 199.887 195.423 199.868C197.08 198.548 193.084 201.144 195.528 199.81C196.688 199.192 197.846 198.552 199.006 197.935C200.397 197.167 200.007 195.087 198.804 194.488ZM60.8213 88.0427C67.6894 72.648 78.8538 59.1566 92.1207 49.0388C98.8475 43.9065 106.334 39.2953 114.188 36.1439C117.295 34.8947 120.798 33.6609 124.168 33.635C134.365 33.5511 136.354 42.9911 132.638 51.031C120.47 77.4222 86.8639 93.9837 58.0983 94.9666C58.8971 92.6666 59.783 90.3603 60.8213 88.0427Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="col-lg-7" data-aos="fade-up" data-aos-delay="300">
+                <div class="faq-container">
+
+                    <div class="faq-item faq-active">
+                        <h3>NAO sostituisce il personale umano?</h3>
+                        <div class="faq-content">
+                            <p>No. NAO Smart AI è pensato come strumento che affianca medici, educatori e operatori, ampliando le possibilità di relazione e stimolo, non come sostituto delle competenze umane.</p>
+                        </div>
+                        <i class="faq-toggle bi bi-chevron-right"></i>
+                    </div><!-- End Faq item-->
+
+                    <div class="faq-item">
+                        <h3>Serve personale tecnico per usarlo?</h3>
+                        <div class="faq-content">
+                            <p>No. Le personalità del robot si configurano con semplici istruzioni in linguaggio naturale e l’interazione con NAO avviene tramite comandi vocali, senza dover scrivere codice.</p>
+                        </div>
+                        <i class="faq-toggle bi bi-chevron-right"></i>
+                    </div><!-- End Faq item-->
+
+                    <div class="faq-item">
+                        <h3>Quali requisiti tecnici sono necessari?</h3>
+                        <div class="faq-content">
+                            <p>È sufficiente disporre di un robot NAO 6, una connessione WiFi stabile e un server (o servizio cloud) su cui eseguire la Web API di NAO Smart AI.</p>
+                        </div>
+                        <i class="faq-toggle bi bi-chevron-right"></i>
+                    </div><!-- End Faq item-->
+
+                    <div class="faq-item">
+                        <h3>Il progetto è davvero open source?</h3>
+                        <div class="faq-content">
+                            <p>Sì. Il codice è pubblicato su GitHub con licenza GNU AGPL v3; l’obiettivo è favorire una diffusione ampia e sostenibile in contesti a forte impatto sociale.</p>
+                        </div>
+                        <i class="faq-toggle bi bi-chevron-right"></i>
+                    </div><!-- End Faq item-->
+
+                </div>
+            </div>
+
         </div>
-
-        <div class="faq-list">
-          <ul>
-            <li data-aos="fade-up">
-              <i class="bi bi-question-circle icon-help"></i>
-              <a data-bs-toggle="collapse" class="collapse" data-bs-target="#faq1">NAO sostituisce il personale umano? <i class="bi bi-chevron-down icon-show"></i><i class="bi bi-chevron-up icon-close"></i></a>
-              <div id="faq1" class="collapse show" data-bs-parent=".faq-list">
-                <p>
-                  No. NAO Smart AI è pensato come strumento che affianca medici, educatori e operatori, ampliando le possibilità di relazione e stimolo, non come sostituto delle competenze umane.
-                </p>
-              </div>
-            </li>
-
-            <li data-aos="fade-up" data-aos-delay="100">
-              <i class="bi bi-question-circle icon-help"></i>
-              <a data-bs-toggle="collapse" data-bs-target="#faq2" class="collapsed">Serve personale tecnico per usarlo? <i class="bi bi-chevron-down icon-show"></i><i class="bi bi-chevron-up icon-close"></i></a>
-              <div id="faq2" class="collapse" data-bs-parent=".faq-list">
-                <p>
-                  No. Le personalità del robot si configurano con semplici istruzioni in linguaggio naturale e l’interazione con NAO avviene tramite comandi vocali, senza dover scrivere codice.
-                </p>
-              </div>
-            </li>
-
-            <li data-aos="fade-up" data-aos-delay="200">
-              <i class="bi bi-question-circle icon-help"></i>
-              <a data-bs-toggle="collapse" data-bs-target="#faq3" class="collapsed">Quali requisiti tecnici sono necessari? <i class="bi bi-chevron-down icon-show"></i><i class="bi bi-chevron-up icon-close"></i></a>
-              <div id="faq3" class="collapse" data-bs-parent=".faq-list">
-                <p>
-                  È sufficiente disporre di un robot NAO 6, una connessione WiFi stabile e un server (o servizio cloud) su cui eseguire la Web API di NAO Smart AI.
-                </p>
-              </div>
-            </li>
-
-            <li data-aos="fade-up" data-aos-delay="300">
-              <i class="bi bi-question-circle icon-help"></i>
-              <a data-bs-toggle="collapse" data-bs-target="#faq4" class="collapsed">Il progetto è davvero open source? <i class="bi bi-chevron-down icon-show"></i><i class="bi bi-chevron-up icon-close"></i></a>
-              <div id="faq4" class="collapse" data-bs-parent=".faq-list">
-                <p>
-                  Sì. Il codice è pubblicato su GitHub con licenza GNU AGPL v3; l’obiettivo è favorire una diffusione ampia e sostenibile in contesti a forte impatto sociale.
-                </p>
-              </div>
-            </li>
-
-          </ul>
-        </div>
-
       </div>
     </section>
     <!-- End FAQ Section -->
 
-    <!-- ======= Team Section ======= -->
-    <section id="team" class="team section">
+    <!-- ======= Team Section (con layout Services) ======= -->
+    <section id="team" class="services section">
       <div class="container" data-aos="fade-up">
 
         <div class="section-title">
@@ -563,30 +663,37 @@
           <p>Un progetto scolastico che ha raggiunto visibilità nazionale, mettendo l’innovazione al servizio delle persone più fragili.</p>
         </div>
 
-        <div class="row gy-4">
+        <div class="row g-4">
 
-          <div class="col-lg-6">
-            <div class="member d-flex align-items-start">
-              <div class="member-info">
-                <h4>IISS C. Colamonico – N. Chiarulli</h4>
-                <span>Acquaviva delle Fonti (BA)</span>
-                <p>
-                  Docenti e studenti dell’indirizzo Informatica e Telecomunicazioni hanno ideato, sviluppato e testato NAO Smart AI tra laboratorio e contesti reali.
-                </p>
-                <p>
-                  Il progetto è nato nei percorsi PNRR “AI Smart Bots” e nel PTOF “NAO Smart AI – Developers Team”, coinvolgendo studenti del triennio.
-                </p>
+          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="service-card d-flex">
+              <div class="icon flex-shrink-0">
+                <i class="bi bi-buildings"></i>
+              </div>
+              <div>
+                <h3>IISS C. Colamonico – N. Chiarulli</h3>
+                <p>Acquaviva delle Fonti (BA)</p>
+                <p>Docenti e studenti dell’indirizzo Informatica e Telecomunicazioni hanno ideato, sviluppato e testato NAO Smart AI tra laboratorio e contesti reali.</p>
+                <p>Il progetto è nato nei percorsi PNRR “AI Smart Bots” e nel PTOF “NAO Smart AI – Developers Team”, coinvolgendo studenti del triennio.</p>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-6">
-            <ul>
-              <li>Robotica sociale basata su AI generativa (Gemini, altri LLM via LiteLLM).</li>
-              <li>Codice open source e documentazione pubblica per favorire la replicabilità.</li>
-              <li>Allineamento agli obiettivi ONU su salute, istruzione e innovazione sostenibile.</li>
-              <li>Disponibilità a collaborazioni con ospedali, scuole, centri Alzheimer e realtà associative.</li>
-            </ul>
+          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
+             <div class="service-card d-flex">
+              <div class="icon flex-shrink-0">
+                <i class="bi bi-award"></i>
+              </div>
+              <div>
+                <h3>Obiettivi e Tecnologie</h3>
+                <ul>
+                  <li>Robotica sociale basata su AI generativa (Gemini, altri LLM via LiteLLM).</li>
+                  <li>Codice open source e documentazione pubblica per favorire la replicabilità.</li>
+                  <li>Allineamento agli obiettivi ONU su salute, istruzione e innovazione sostenibile.</li>
+                  <li>Disponibilità a collaborazioni con ospedali, scuole, centri Alzheimer e realtà associative.</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -596,7 +703,7 @@
     <!-- End Team Section -->
 
     <!-- ======= Contact Section ======= -->
-    <section id="contact" class="contact section">
+    <section id="contact" class="contact section light-background">
       <div class="container" data-aos="fade-up">
 
         <div class="section-title">
@@ -604,75 +711,95 @@
           <p>Vuoi portare NAO Smart AI nel tuo ospedale, scuola o centro? Compila il form per richiedere una demo o proporre una collaborazione.</p>
         </div>
 
-        <div class="row gy-4">
+        <div class="row g-4 g-lg-5">
 
-          <div class="col-lg-5 d-flex align-items-stretch">
-            <div class="info">
-              <div class="address">
-                <i class="bi bi-building"></i>
-                <h4>Istituto:</h4>
-                <p>IISS C. Colamonico – N. Chiarulli, Acquaviva delle Fonti (BA)</p>
+          <div class="col-lg-5">
+              <div class="info-box" data-aos="fade-up" data-aos-delay="200">
+                  <h3>Recapiti</h3>
+                  <p>Siamo a disposizione per informazioni tecniche, didattiche e amministrative.</p>
+
+                  <div class="info-item" data-aos="fade-up" data-aos-delay="300">
+                      <div class="icon-box">
+                          <i class="bi bi-geo-alt"></i>
+                      </div>
+                      <div class="content">
+                          <h4>Istituto</h4>
+                          <p>IISS C. Colamonico – N. Chiarulli</p>
+                          <p>Acquaviva delle Fonti (BA)</p>
+                      </div>
+                  </div>
+
+                  <div class="info-item" data-aos="fade-up" data-aos-delay="400">
+                      <div class="icon-box">
+                          <i class="bi bi-envelope"></i>
+                      </div>
+                      <div class="content">
+                          <h4>Email</h4>
+                          <p>nao@colamonicochiarulli.edu.it</p>
+                      </div>
+                  </div>
+
+                  <div class="info-item" data-aos="fade-up" data-aos-delay="500">
+                      <div class="icon-box">
+                          <i class="bi bi-github"></i>
+                      </div>
+                      <div class="content">
+                          <h4>Repository GitHub</h4>
+                          <p><a href="https://github.com/colamonico-chiarulli/nao-smart-ai" target="_blank">colamonico-chiarulli/nao-smart-ai</a></p>
+                      </div>
+                  </div>
               </div>
-
-              <div class="email mt-4">
-                <i class="bi bi-envelope"></i>
-                <h4>Email:</h4>
-                <p>nao@colamonicochiarulli.edu.it</p>
-              </div>
-
-              <div class="phone mt-4">
-                <i class="bi bi-github"></i>
-                <h4>Repository GitHub:</h4>
-                <p><a href="https://github.com/colamonico-chiarulli/nao-smart-ai" target="_blank">github.com/colamonico-chiarulli/nao-smart-ai</a></p>
-              </div>
-
-              <p class="mt-4">
-                Se NAO Smart AI viene adottato da una scuola, ospedale o ente con finalità sociali, è gradita una segnalazione al team di progetto.
-              </p>
-            </div>
           </div>
 
-          <div class="col-lg-7 mt-4 mt-lg-0 d-flex align-items-stretch">
-            <form action="forms/contact.php" method="post" class="php-email-form">
-              <div class="row">
-                <div class="col-md-6 form-group">
-                  <label for="name">Nome struttura / ente</label>
-                  <input type="text" name="name" class="form-control" id="name" required>
-                </div>
-                <div class="col-md-6 form-group mt-3 mt-md-0">
-                  <label for="subject">Tipologia struttura</label>
-                  <select name="subject" id="subject" class="form-control" required>
-                    <option value="">Seleziona</option>
-                    <option>Ospedale pediatrico</option>
-                    <option>Centro educativo / scuola</option>
-                    <option>Centro Alzheimer</option>
-                    <option>Centro per autismo</option>
-                    <option>Altro ente socio-sanitario</option>
-                  </select>
-                </div>
-              </div>
+          <div class="col-lg-7">
+            <div class="contact-form" data-aos="fade-up" data-aos-delay="300">
+                <h3>Inviaci un messaggio</h3>
+                <p>Compila il modulo sottostante per essere ricontattato dal nostro team.</p>
 
-              <div class="form-group mt-3">
-                <label for="email">Email referente</label>
-                <input type="email" class="form-control" name="email" id="email" required>
-              </div>
+                <form action="forms/contact.php" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
+                  <div class="row gy-4">
+                    <div class="col-md-6 form-group">
+                      <input type="text" name="name" class="form-control" id="name" placeholder="Nome struttura / ente" required>
+                    </div>
+                    <div class="col-md-6 form-group">
+                      <select name="subject" id="subject" class="form-control" required>
+                        <option value="">Tipologia struttura...</option>
+                        <option>Ospedale pediatrico</option>
+                        <option>Centro educativo / scuola</option>
+                        <option>Centro Alzheimer</option>
+                        <option>Centro per autismo</option>
+                        <option>Altro ente socio-sanitario</option>
+                      </select>
+                    </div>
 
-              <div class="form-group mt-3">
-                <label for="message">Come vorresti utilizzare NAO Smart AI?</label>
-                <textarea class="form-control" name="message" rows="5" required></textarea>
-              </div>
+                    <div class="col-md-12 form-group">
+                        <input type="email" class="form-control" name="email" id="email" placeholder="Email referente" required>
+                    </div>
 
-              <div class="form-group mt-3">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="newsletter" id="newsletter">
-                  <label class="form-check-label" for="newsletter">
-                    Desidero ricevere aggiornamenti sul progetto NAO Smart AI.
-                  </label>
-                </div>
-              </div>
+                    <div class="col-md-12 form-group">
+                      <textarea class="form-control" name="message" rows="5" placeholder="Come vorresti utilizzare NAO Smart AI?" required></textarea>
+                    </div>
 
-              <div class="text-center mt-3"><button type="submit">Invia richiesta</button></div>
-            </form>
+                    <div class="col-md-12 form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="newsletter" id="newsletter">
+                            <label class="form-check-label" for="newsletter">
+                                Desidero ricevere aggiornamenti sul progetto NAO Smart AI.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 text-center">
+                        <div class="loading">Loading</div>
+                        <div class="error-message"></div>
+                        <div class="sent-message">Your message has been sent. Thank you!</div>
+                        <button type="submit" class="btn">Invia richiesta</button>
+                    </div>
+
+                  </div>
+                </form>
+
+            </div>
           </div>
 
         </div>
