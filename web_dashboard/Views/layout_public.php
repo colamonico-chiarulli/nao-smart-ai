@@ -1,12 +1,13 @@
 <?php
+
 /**
- * File: src/Views/layout_public.php
+ * File:	/nao-smart-ai/web_dashboard/Views/layout_public.php
  * @package NAO-Smart-AI
  * @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
  *
  * Created Date: Tuesday, December 17th 2025, 10:52:06 pm
  * -----
- * Last Modified: 	December 17th 2025 10:52:06 pm
+ * Last Modified: 	January 12th 2026 9:00:38 pm
  * Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
  * -----
  * @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -78,141 +79,87 @@
 
 <body class="index-page">
 
+    <!-- ======= Header ======= -->
     <header id="header" class="header d-flex align-items-center fixed-top">
-        <div
-            class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+        <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-            <a href="<?= url() ?>" class="logo d-flex align-items-center me-auto me-xl-0">
-                <!-- Uncomment the line below if you also wish to use an image logo -->
+            <a href="#hero" class="logo d-flex align-items-center me-auto me-xl-0">
                 <!-- <img src="<?= url('assets/img/logo.png') ?>" alt=""> -->
                 <h1 class="sitename">NAO Smart AI</h1>
             </a>
 
             <nav id="navmenu" class="navmenu">
                 <ul>
-                    <li><a href="#hero" class="active">Home</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#features">Features</a></li>
-                    <li><a href="#services">Services</a></li>
-                    <li><a href="#pricing">Pricing</a></li>
-                    <li class="dropdown"><a href="#"><span>Dropdown</span> <i
-                                class="bi bi-chevron-down toggle-dropdown"></i></a>
-                        <ul>
-                            <li><a href="#">Dropdown 1</a></li>
-                            <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i
-                                        class="bi bi-chevron-down toggle-dropdown"></i></a>
-                                <ul>
-                                    <li><a href="#">Deep Dropdown 1</a></li>
-                                    <li><a href="#">Deep Dropdown 2</a></li>
-                                    <li><a href="#">Deep Dropdown 3</a></li>
-                                    <li><a href="#">Deep Dropdown 4</a></li>
-                                    <li><a href="#">Deep Dropdown 5</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="#">Dropdown 2</a></li>
-                            <li><a href="#">Dropdown 3</a></li>
-                            <li><a href="#">Dropdown 4</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#contact">Contact</a></li>
+                    <li><a class="nav-link scrollto active" href="#hero">Home</a></li>
+                    <li><a class="nav-link scrollto" href="#about">Perché NAO</a></li>
+                    <li><a class="nav-link scrollto" href="#services">Casi d’uso</a></li>
+                    <li><a class="nav-link scrollto" href="#features">Come funziona</a></li>
+                    <li><a class="nav-link scrollto" href="#testimonials">Impatto</a></li>
+                    <li><a class="nav-link scrollto" href="#team">Team</a></li>
+                    <li><a class="nav-link scrollto" href="#contact">Contatti</a></li>
+                    <!-- <li><a class="getstarted scrollto" href="#contact">Richiedi una demo</a></li> -->
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
             </nav>
 
             <div class="d-flex">
-                <a class="btn-getstarted me-2" href="<?= url('login') ?>">Login</a>
-                <a class="btn-getstarted" href="<?= url('register') ?>">Register</a>
+                 <a class="btn-getstarted" href="#contact">Richiedi una demo</a>
             </div>
 
         </div>
     </header>
+    <!-- End Header -->
 
     <main class="main">
         <?= $content ?? '' ?>
     </main>
 
+    <!-- ======= Footer ======= -->
     <footer id="footer" class="footer">
 
-        <div class="container footer-top">
-            <div class="row gy-4">
-                <div class="col-lg-4 col-md-6 footer-about">
-                    <a href="index.html" class="logo d-flex align-items-center">
-                        <span class="sitename">NAO Smart AI</span>
-                    </a>
-                    <div class="footer-contact pt-3">
-                        <p>A108 Adam Street</p>
-                        <p>New York, NY 535022</p>
-                        <p class="mt-3"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-                        <p><strong>Email:</strong> <span>info@example.com</span></p>
+        <div class="footer-top">
+            <div class="container">
+                <div class="row gy-4">
+
+                    <div class="col-lg-4 col-md-6 footer-info">
+                        <a href="#hero" class="logo d-flex align-items-center">
+                            <span class="sitename">NAO Smart AI</span>
+                        </a>
+                        <p>Robotica sociale intelligente, empatica e accessibile per la sanità, l’educazione e l’inclusione sociale.[file:1][file:4]</p>
                     </div>
-                    <div class="social-links d-flex mt-4">
-                        <a href=""><i class="bi bi-twitter-x"></i></a>
-                        <a href=""><i class="bi bi-facebook"></i></a>
-                        <a href=""><i class="bi bi-instagram"></i></a>
-                        <a href=""><i class="bi bi-linkedin"></i></a>
+
+                    <div class="col-lg-4 col-md-6 footer-links">
+                        <h4>Risorse</h4>
+                        <ul>
+                            <li><i class="bi bi-chevron-right"></i> <a href="https://github.com/colamonico-chiarulli/nao-smart-ai" target="_blank">Repository GitHub</a></li>
+                            <li><i class="bi bi-chevron-right"></i> <a href="#">Brochure progetto (PDF)</a></li>
+                        </ul>
                     </div>
-                </div>
 
-                <div class="col-lg-2 col-md-3 footer-links">
-                    <h4>Useful Links</h4>
-                    <ul>
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#">About us</a></li>
-                        <li><a href="#">Services</a></li>
-                        <li><a href="#">Terms of service</a></li>
-                        <li><a href="#">Privacy policy</a></li>
-                    </ul>
-                </div>
+                    <div class="col-lg-4 col-md-6 footer-links">
+                        <h4>Legale</h4>
+                        <ul>
+                            <li><i class="bi bi-chevron-right"></i> <a href="#">Privacy Policy</a></li>
+                            <li><i class="bi bi-chevron-right"></i> <a href="#">Licenza GNU AGPL v3</a></li>
+                        </ul>
+                    </div>
 
-                <div class="col-lg-2 col-md-3 footer-links">
-                    <h4>Our Services</h4>
-                    <ul>
-                        <li><a href="#">Web Design</a></li>
-                        <li><a href="#">Web Development</a></li>
-                        <li><a href="#">Product Management</a></li>
-                        <li><a href="#">Marketing</a></li>
-                        <li><a href="#">Graphic Design</a></li>
-                    </ul>
                 </div>
-
-                <div class="col-lg-2 col-md-3 footer-links">
-                    <h4>Hic solutasetp</h4>
-                    <ul>
-                        <li><a href="#">Molestiae accusamus iure</a></li>
-                        <li><a href="#">Excepturi dignissimos</a></li>
-                        <li><a href="#">Suscipit distinctio</a></li>
-                        <li><a href="#">Dilecta</a></li>
-                        <li><a href="#">Sit quas consectetur</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-2 col-md-3 footer-links">
-                    <h4>Nobis illum</h4>
-                    <ul>
-                        <li><a href="#">Ipsam</a></li>
-                        <li><a href="#">Laudantium dolorum</a></li>
-                        <li><a href="#">Dinera</a></li>
-                        <li><a href="#">Trodelas</a></li>
-                        <li><a href="#">Flexo</a></li>
-                    </ul>
-                </div>
-
             </div>
         </div>
 
-        <div class="container copyright text-center mt-4">
-            <p>© <span>Copyright</span> <strong class="px-1 sitename">iLanding</strong> <span>All Rights Reserved</span>
-            </p>
-            <div class="credits">
-                <!-- All the links in the footer should remain intact. -->
-                <!-- You can delete the links only if you've purchased the pro version. -->
-                <!-- Licensing information: https://bootstrapmade.com/license/ -->
-                <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
-                Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+        <div class="container footer-bottom clearfix">
+            <div class="copyright">
+                &copy; <span id="year"></span> <strong><span>NAO Smart AI</span></strong> – IISS C. Colamonico – N. Chiarulli
             </div>
         </div>
-
     </footer>
+    <!-- End Footer -->
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+
 
     <!-- Scroll Top -->
     <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
