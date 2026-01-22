@@ -125,7 +125,7 @@
                         <a href="#hero" class="logo d-flex align-items-center">
                             <span class="sitename">NAO Smart AI</span>
                         </a>
-                        <p>Robotica sociale intelligente, empatica e accessibile per la sanità, l’educazione e l’inclusione sociale.[file:1][file:4]</p>
+                        <p>Robotica sociale intelligente, empatica e accessibile per la sanità, l’educazione e l’inclusione sociale.</p>
                     </div>
 
                     <div class="col-lg-4 col-md-6 footer-links">
