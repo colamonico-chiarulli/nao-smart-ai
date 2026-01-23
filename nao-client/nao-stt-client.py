@@ -5,7 +5,7 @@ File:    /nao-client/nao-smart-ai-client.py
 @copyright    (c)2025 Nuccio Gargano
 Created Date: Friday, October 10th 2025, 18:30:00 pm
 -----
-Last Modified:     November 12th 2025, 05:00:00 pm
+Last Modified: 	 January 22nd 2026 7:00:00 pm
 Modified By:     Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license    https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -207,6 +207,7 @@ class MyClass(GeneratedClass):
     def handle_end_of_process(self):
         """Gestisce la chiusura applicando un buffer di silenzio"""
         try:
+            was_recording = self.is_recording
             if self.is_recording:
                 wait_seconds = 0.0
                 now = time.time()
@@ -225,7 +226,8 @@ class MyClass(GeneratedClass):
 
                 self.stop_recording()
 
-            self.trim_by_timing_and_send()
+            if was_recording:
+                self.trim_by_timing_and_send()
 
         except Exception as e:
             self.logger.error("Errore handle_end_of_process: " + str(e))
@@ -237,8 +239,8 @@ class MyClass(GeneratedClass):
             import os
 
             if not os.path.exists(self.audio_file_path):
-                self.logger.error("File audio non trovato")
-                self.onTranscriptionFailed()
+                # Se il file non esiste (es. errore avvio registrazione), usciamo senza errore
+                # self.logger.error("File audio non trovato") 
                 return
 
             if self.recording_start_time is None:
@@ -308,6 +310,12 @@ class MyClass(GeneratedClass):
 
         start_wait = time.time()
         while self.tts_is_speaking:
+            # Check fisico di sicurezza: se il robot NON parla, l'evento è probabilmente stantio
+            if not self.is_robot_speaking():
+                 self.logger.info("Override evento TTS: il robot ha smesso di parlare fisicamente")
+                 self.tts_is_speaking = False 
+                 break 
+            
             if time.time() - start_wait > self.max_tts_wait_seconds:
                 self.logger.warning("Timeout evento TTS, procedo con la registrazione")
                 break

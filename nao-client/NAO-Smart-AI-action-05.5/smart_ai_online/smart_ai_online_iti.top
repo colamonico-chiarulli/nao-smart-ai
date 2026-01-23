@@ -1,0 +1,31 @@
+topic: ~smart_ai_online()
+language: iti
+
+#NAO- Dialogo - topic smart_ai_offline - 
+# Definizione Concetti.
+concept:(geminiAttendi) ^rand ["Ok, parlate liberamente" "Ok, nel frattempo mi riposo" "Ok, lascio parlare voi"]
+concept:(geminiStart) ^rand["Che bello, ora sarò più intelligente" "attivo l'intelligenza artificiale e dialoghiamo meglio" "Bene! Così possiamo parlare di qualsiasi cosa"]
+  
+### Gemini
+u:(e:onStart) $startListening=1 ^activate("localAudio") ^deactivate("onlineAudio") ^deactivate("fastAudio")
+
+# TTS del robot nativo
+u:("audio locale") Attivo audio del robot ^activate("localAudio") $stopFastAudio=1 $stopOnlineAudio=1
+u:(*) %localAudio $domandaAI=$Dialog/LastInput
+
+u:("audio online") Attivo audio online ^deactivate("localAudio") ^gotoReactivate("onlineAudio")
+u:("audio fast")  Attivo fast audio ^deactivate("localAudio") ^gotoReactivate("fastAudio")
+
+#audio WAV - lavorazione su robot - Vosk API
+proposal: %onlineAudio $onlineAudio=1 $stopFastAudio=1 ^deactivate("onlineAudio")
+
+#audio OGG - lavorazione su API - Vosk API
+proposal: %fastAudio $fastAudio=1 $stopOnlineAudio=1 ^deactivate("fastAudio")
+
+#cambia argomento senza disattivare Gemini
+u:("cambiamo argomento") $changeTopicAI=1
+ 
+
+# Quando il robot viene toccato sulla fronte si esce dal programma
+u:(e:FrontTactilTouched) 
+    Parliamo di altro, ti va? $exit=1

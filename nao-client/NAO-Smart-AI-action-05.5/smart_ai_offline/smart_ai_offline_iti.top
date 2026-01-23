@@ -1,0 +1,65 @@
+topic: ~smart_ai_offline()
+language: iti
+
+#NAO- Dialogo - topic smart_ai_offline - 
+# Definizione Concetti.
+concept:(si) [sì "va bene" certo "perché no" ok certamente "molto bene" sicuramente "assolutamente si"]
+concept:(no) [no "non voglio" "non c'è modo" mai "per niente" "assolutamente no"]
+concept:(come) ["come stai" "come va" "come ti senti"]
+concept:(felice) [ok bene grande felice "va bene" "sono contento" "non male"]
+concept:(triste) [triste cattivo infelice stanco]
+concept:(ripeti) ["non ho capito" "puoi ripetere" "non ho sentito"]
+concept:(grazie) ["grazie" "mille grazie" gentilissimo]
+concept:(prego)["di nulla" prego "è stato un piacere"]
+concept:(hello) [ciao buongiorno salve "ciao nao"] 
+concept:(arrivederci) [ciao arrivederci "ciao ciao" "ci vediamo" addio "buona giornata"]
+concept:(bravo) [bravo complimenti bravissimo "sei grande"]
+concept:(geminiAttendi) ^rand ["Ok, parlate liberamente" "Ok, nel frattempo mi riposo" "Ok, lascio parlare voi"]
+concept:(geminiStart) ^rand["Che bello, ora sarò più intelligente" "attivo l'intelligenza artificiale e dialoghiamo meglio" "Bene! Così possiamo parlare di qualsiasi cosa"]
+
+## Concept Calcoli
+concept: (Numbers) [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50]
+concept: (ArithmeticOperator) [più meno per diviso elevato]
+concept:(result) ["Il calcolo proposto è" "mi hai chiesto" "vuoi sapere quanto fa"]
+concept:(getNumber) ["Cosa vuoi calcolare?" "Dammi un calcolo da fare" "Dammi un altra operazione"]
+
+  
+#ginnastica
+u:(["Vuoi fare" "Ti va di fare" "sai fare" "puoi fare" facciamo] {“un po’ di”} ["attività fisica" ginnastica]) Si, certo posso fare flessioni o tai ci uan. Cosa vuoi che faccia? 
+    u1:(flessioni) Teniamoci in forma! $pushup=1
+    u1:([tai taici taiciuan]) Vada per il tai ci, così mi rilasso! $taiChi=1
+self.tts_state_event
+#Balli
+u:(["Ti va di" sai puoi vuoi] ballare?) Si, dai! Ne ho proprio voglia! $dance=1 
+u:([conosci "sai ballare" "puoi ballare" "vuoi ballare"] {anche} la macarena?) Si, certo! Balliamo insieme! $macarena=1
+u:([quanti quali] balli conosci?) Ti faccio vedere, cosa faccio in discoteca! $discomusic=1
+
+#camminare
+u:(["Ti va di" sai puoi vuoi] camminare?) Si, facciamo due passi! $cammina=1
+
+#foto
+u:(["Ti va di" Puoi sai vuoi] fare una foto?) Si, certo, dammi un attimo! $foto=1
+
+#Suonare
+u:(["Ti va di" Puoi sai] suonare {["uno strumento" "il sax" "la chitarra"]}?) Si, posso suonare il sax o la chitarra! Cosa vuoi sentire?
+    u1:({il} sax) Un attimo che mi preparo! $sax=1
+        u2:({[sentiamo "sentiamo anche"] la} chitarra) Eccola qui! $chitarra=1
+    u1:({la} chitarra) Eccola qui! $chitarra=1
+        u2:({[sentiamo "sentiamo anche"] il} sax) Si certo, dammi un attimo! $sax=1
+
+#Orario
+u:(che [ore ora] [sono è]) $getTime=1
+
+### Calcolatrice
+
+u: (["sai fare" "sei capace di fare" "puoi fare"] [calcoli operazioni]) Posso fare somme, sottrazioni, moltiplicazioni, divisioni ed elevare a potenza con i numeri da 1 a 50. ^rand ~getNumber
+    u1: ({"quanto fa" calcola "sai calcolare"} _~Numbers _~ArithmeticOperator _~Numbers) ^rand ~result  $1  $2  $3 . $number1=$1 $arithmeticoperator=$2 $number2=$3 $calcola=1 
+
+u:({"quanto fa" calcola "sai calcolare"} _~Numbers _~ArithmeticOperator _~Numbers) ^rand ~result  $1  $2  $3 . $number1=$1 $arithmeticoperator=$2 $number2=$3 $calcola=1
+
+#Saluto       
+u:(["vuoi salutare" "puoi salutare" saluta] {"i signori" "i ragazzi" "i bambini"}?) Certo! È stato bello incontrarvi! Spero di rìvedervi presto! $inchino=1
+
+# Quando il robot viene toccato sulla fronte si esce dal programma
+u:(e:FrontTactilTouched) 
+    Parliamo di altro, ti va? $exit=1

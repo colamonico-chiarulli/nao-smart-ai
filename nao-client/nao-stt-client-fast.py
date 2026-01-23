@@ -5,7 +5,7 @@ File:    /nao-client/nao-stt-client-fast.py
 @copyright    (c)2025 Nuccio Gargano
 Created Date: Friday, October 10th 2025, 18:30:00 pm
 -----
-Last Modified:     December 2nd 2025
+Last Modified: 	 January 22nd 2026 7:00:00 pm
 Modified By:     Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license    https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -209,6 +209,7 @@ class MyClass(GeneratedClass):
     def handle_end_of_process(self):
         """Gestisce la chiusura applicando un buffer di silenzio"""
         try:
+            was_recording = self.is_recording
             if self.is_recording:
                 wait_seconds = 0.0
                 now = time.time()
@@ -227,7 +228,8 @@ class MyClass(GeneratedClass):
 
                 self.stop_recording()
 
-            self.trim_by_timing_and_send()
+            if was_recording:
+                self.trim_by_timing_and_send()
 
         except Exception as e:
             self.logger.error("Errore handle_end_of_process: " + str(e))
@@ -242,8 +244,8 @@ class MyClass(GeneratedClass):
             import os
 
             if not os.path.exists(self.audio_file_path):
-                self.logger.error("File audio non trovato")
-                self.onTranscriptionFailed()
+                # self.logger.error("File audio non trovato")
+                # self.onTranscriptionFailed()
                 return
 
             # Skip trim logic entirely for OGG/Fast mode

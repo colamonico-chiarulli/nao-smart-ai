@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<package version="0.5.5" uuid="nao-smart-ai-action-055-d799df" installOnlyAtStartup="false">
+ <names>
+  <name lang="en_US">dialogNAOsmartAI</name>
+  <name lang="it_IT">dialogNAOsmartAI</name>
+ </names>
+ <descriptions>
+  <description lang="en_US">NAO Smart AI - client</description>
+  <description lang="it_IT">NAO Smart AI - client</description>
+ </descriptions>
+ <supportedLanguages>
+  <language>it_IT</language>
+  <language>en_US</language>
+ </supportedLanguages>
+ <descriptionLanguages>
+  <language>it_IT</language>
+  <language>en_US</language>
+ </descriptionLanguages>
+ <contents>
+  <behaviorContent path="behavior_1">
+   <userRequestable/>
+   <nature>interactive</nature>
+   <names>
+    <name lang="en_US">colamonico</name>
+    <name lang="it_IT">colamonico</name>
+   </names>
+   <triggerSentences>
+    <sentence lang="en_US">colamonico</sentence>
+    <sentence lang="en_US">giochiamo</sentence>
+    <sentence lang="it_IT">colamonico</sentence>
+    <sentence lang="it_IT">giochiamo</sentence>
+   </triggerSentences>
+   <loadingResponses>
+    <sentence lang="it_IT">Si dai mi piace il colamonico!</sentence>
+   </loadingResponses>
+   <permissions/>
+  </behaviorContent>
+ </contents>
+ <requirements>
+  <naoqiRequirement minVersion="2.8" maxVersion="2.8"/>
+  <robotRequirement model="NAO"/>
+ </requirements>
+</package>

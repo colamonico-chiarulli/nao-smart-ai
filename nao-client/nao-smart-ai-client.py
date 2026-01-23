@@ -5,7 +5,7 @@ File:	/nao-client/nao-smart-ai-client.py
 @copyright	(c)2024 Rino Andriano
 Created Date: Wednesday, June 4th 2024, 6:11:00 pm
 -----
-Last Modified: 	October 6th 2025 5:35:00 pm
+Last Modified: 	January 22nd 2026 7:00:00 pm
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -46,14 +46,22 @@ class MyClass(GeneratedClass):
         GeneratedClass.__init__(self)
         self.api_url = "https://YOUR_WEB_API_URL/chat"
         self.chat_id = None  
+        self.unload_requested = False
         self.tts = ALProxy("ALTextToSpeech")
         self.animPlayer = ALProxy("ALAnimationPlayer")
         self.motion = ALProxy("ALMotion")
         self.posture = self.session().service("ALRobotPosture")
         self.dialog = ALProxy("ALDialog")
         self.speech_recognition = ALProxy("ALSpeechRecognition")
+        self.memory = ALProxy("ALMemory")
 
     def onLoad(self):
+        self.unload_requested = False
+        try:
+            self.api_url = self.getParameter("api_url")
+        except Exception:
+            self.logger.warning("Parametro api_url non trovato o errore, uso default")
+
         self.dialog.subscribe("my_subscribe")
         try:
             self.motion.setMoveArmsEnabled(True, True)
@@ -64,8 +72,26 @@ class MyClass(GeneratedClass):
         pass
 
     def onUnload(self):
-        self.dialog.unsubscribe("my_subscribe")
+        self.unload_requested = True
+        self.stop_all_actions()
+        try:
+            self.dialog.unsubscribe("my_subscribe")
+        except Exception:
+            pass
         pass
+
+    def stop_all_actions(self):
+        """Ferma tutte le attività correnti del robot"""
+        try:
+            if self.tts:
+                self.tts.stopAll()
+            # self.animPlayer.stopAll() # Metodo non esistente in alcune versioni NAOqi
+            if self.motion:
+                self.motion.stopMove()
+            if self.memory:
+                self.memory.raiseEvent("Gemini/TtsSpeaking", 0)
+        except Exception as e:
+            self.logger.error("Errore durante stop_all_actions: " + str(e))
 
     """
     Processa la risposta dell'AI per NAO, eseguendo movimenti e pronunciando il testo.
@@ -74,35 +100,52 @@ class MyClass(GeneratedClass):
     def process_ai_response(self, response):
         # Scorrimento dei chunk
         for chunk in response['chunks']:
+            if self.unload_requested:
+                break
+
             # Pronuncia del testo associato
             try:
+                if self.memory:
+                    self.memory.raiseEvent("Gemini/TtsSpeaking", 1)
                 speaking=qi.async(self.tts.say, str(chunk['text']))
-
             except Exception as e:
                 self.logger.error("Errore nella pronuncia " + str(e))
 
             # Esecuzione dei movimenti associati al chunk
             for movimento in chunk['movements']:
+                if self.unload_requested:
+                    break
                 time.sleep(1)
                 try:
                     # Riproduzione dell'animazione
                     self.animPlayer.run(str(movimento))
-
                 except Exception as e:
                     self.logger.error("Errore nell'esecuzione del movimento" + str(e))
 
             while speaking.isRunning():
+                if self.unload_requested:
+                    self.tts.stopAll()
+                    break
+                
                 mov_speaking='animations/Stand/BodyTalk/Speaking/BodyTalk_' + str(random.randint(1, 22))
-                self.animPlayer.run(mov_speaking)
+                try:
+                    self.animPlayer.run(mov_speaking)
+                except:
+                    pass
                 time.sleep(0.5) #pausa 0.5 secondi
 
-            self.posture.goToPosture("Stand", 1.0)
+            if self.memory:
+                self.memory.raiseEvent("Gemini/TtsSpeaking", 0)
+
+            if not self.unload_requested:
+                self.posture.goToPosture("Stand", 1.0)
             
-            if response['action']:
-                action=response['action']
+            # Use .get() to avoid KeyError if 'action' is missing
+            action_val = response.get('action')
+            if action_val and not self.unload_requested:
                 try:
                     # Riproduzione dell'animazione
-                    self.animPlayer.run(str(action))
+                    self.animPlayer.run(str(action_val))
                 except Exception as e:
                     self.logger.error("Errore nell'esecuzione dell'azione" + str(e))
                 
@@ -168,7 +211,7 @@ class MyClass(GeneratedClass):
 
     def disable_hearing(self):
         # Disattiva il TAG Gemini nel Dialog Colamonico
-        self.dialog.deactivateTag("gemini", "YOUR_TOPIC")
+        self.dialog.deactivateTag("localAudio", "smart_ai_online")
         # Disabilita l'ascolto durante la risposta
         self.speech_recognition.pause(True)
         # Disattiva i segnali visivi dell'ascolto
@@ -182,7 +225,7 @@ class MyClass(GeneratedClass):
         self.speech_recognition.setAudioExpression(True)
         self.speech_recognition.setVisualExpression(True)
         # Riattiva il topic geminiAI
-        self.dialog.activateTag("gemini", "YOUR_TOPIC")
+        self.dialog.activateTag("localAudio", "smart_ai_online")
 
     def onInput_domanda(self, domanda):
         #Viene scartato audio non compreso
@@ -204,11 +247,10 @@ class MyClass(GeneratedClass):
             self.onStopped()
 
     def onInput_cambio(self):
-        """Gestisce il cambio di argomento"""
+        """Gestisce il cambio di argomento: resetta solo la sessione"""
         if self.end_chat():
-            if self.tts:
-                self.tts.say('Ok. Cambiamo argomento!')
-            self.logger.info("Chat chiusa correttamente")
+            self.logger.info("Chat reset on user request (topic change)")
+            # Nessuna azione fisica o verbale di stop qui, come richiesto
 
     def onInput_onStop(self):
         """Gestisce lo stop dell'esecuzione"""
