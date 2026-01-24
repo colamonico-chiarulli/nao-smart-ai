@@ -67,11 +67,13 @@ class MyClass(GeneratedClass):
 
         self.api_url = self.getParameter("api_url")
         if not self.api_url or self.api_url.strip() == "":
-            self.api_url = "http://127.0.0.1:5000/stt/vosk/fast" # Default to FAST route
+            self.api_url = "http://127.0.0.1:5000/chat/voice" # Default to NEW UNIFIED route
 
         self.recording_start_time = None
         self.speech_detected_time = None
         self.prebuffer_seconds = 0.8
+        self.chat_id = None # Maintain chat_id session
+
 
     def onLoad(self):
         """Inizializzazione del box"""
@@ -335,28 +337,55 @@ class MyClass(GeneratedClass):
                 # Leggi file audio
                 with open(self.audio_file_path, 'rb') as audio_file:
                     files_data = {'audio': ('audio.ogg', audio_file, 'audio/ogg')}
+                    data_payload = {}
+                    if self.chat_id:
+                        data_payload['chat_id'] = self.chat_id
 
-                    # Invia al server STT
+                    # Invia al server
                     response = req_module.post(
                         self.api_url,
                         files=files_data,
-                        timeout=10
+                        data=data_payload,
+                        timeout=15
                     )
 
                 if response.status_code == 200:
                     result = response.json()
 
                     if result.get('success'):
-                        transcription = result.get('text', '').strip()
+                        # 1. Update Session Info
+                        if 'chat_id' in result:
+                            self.chat_id = result['chat_id']
+                        
+                        # 2. Check for Unified Response (New Flow)
+                        if 'response' in result:
+                            self.logger.info("Ricevuta risposta diretta AI")
+                            if self.memory:
+                                # Serialize full response for ALMemory
+                                import json
+                                self.memory.raiseEvent("Gemini/DirectResponse", json.dumps(result))
+                            else:
+                                self.logger.error("ALMemory non disponibile per DirectResponse")
 
+                        # 3. Check for Transcription (Old Flow or logging)
+                        # Even in new flow, we might want to log user text
+                        transcription = result.get('transcription', result.get('text', '')).strip()
+                        
                         if transcription:
-                            self.onTranscriptionReady(str(transcription))
+                             # If NO response key was present, we MUST trigger the old signal
+                             # to keep backward compatibility with old server boxes
+                             if 'response' not in result:
+                                 self.onTranscriptionReady(str(transcription))
+                             else:
+                                 self.logger.info("Utente ha detto: " + str(transcription))
                         else:
-                            self.logger.warning("Trascrizione vuota")
-                            self.onTranscriptionFailed()
+                             if 'response' not in result:
+                                 self.logger.warning("Trascrizione vuota")
+                                 self.onTranscriptionFailed()
+
                     else:
                         error_msg = result.get('error', 'Errore sconosciuto')
-                        self.logger.warning("STT fallito: " + str(error_msg))
+                        self.logger.warning("Errore API: " + str(error_msg))
                         self.onTranscriptionFailed()
 
                 else:

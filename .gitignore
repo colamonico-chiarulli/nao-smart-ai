@@ -5,6 +5,7 @@ web_api/ai_prompts/*_system.py
 web_api/utils/movements.json
 web_api/utils/actions.json
 web_api/utils/actions_map.json
+nao6-doc-sdk
 
 # Models - Ignora tutto il contenuto
 web_api/models/*

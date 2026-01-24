@@ -104,10 +104,11 @@ class MyClass(GeneratedClass):
                 break
 
             # Pronuncia del testo associato
+            tts_task_id = None
             try:
                 if self.memory:
                     self.memory.raiseEvent("Gemini/TtsSpeaking", 1)
-                speaking=qi.async(self.tts.say, str(chunk['text']))
+                tts_task_id = self.tts.post.say(str(chunk['text']))
             except Exception as e:
                 self.logger.error("Errore nella pronuncia " + str(e))
 
@@ -122,7 +123,7 @@ class MyClass(GeneratedClass):
                 except Exception as e:
                     self.logger.error("Errore nell'esecuzione del movimento" + str(e))
 
-            while speaking.isRunning():
+            while tts_task_id is not None and self.tts.isRunning(tts_task_id):
                 if self.unload_requested:
                     self.tts.stopAll()
                     break
@@ -238,6 +239,10 @@ class MyClass(GeneratedClass):
             self.disable_hearing()
             #Pronuncia il testo della risposta AI e i relativi movimanti
             self.process_ai_response(response_data)
+            
+            # Pausa di sicurezza per evitare auto-ascolto dell'eco
+            time.sleep(1.0)
+            
             self.enable_hearing()
 
 
