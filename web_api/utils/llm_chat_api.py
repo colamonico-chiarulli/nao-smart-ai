@@ -167,8 +167,8 @@ class LLMChatAPI:
         # Prepara la lista delle azioni per il prompt
         actions_list_str = "\n".join(f"- {key}" for key in self.actions_map.keys())
         
-        # Formatta le istruzioni tecniche iniettando la lista
-        # Usa replace invece di format perché il testo contiene JSON con parentesi graffe
+        # Completa istruzioni tecniche iniettando la lista delle chiavi delle action
+        # Usa replace perché il testo contiene JSON con parentesi graffe
         return TECHNICAL_INSTRUCTIONS.replace("{actions_list}", actions_list_str)
 
     def _load_ai_personality(self):
@@ -507,18 +507,22 @@ class LLMChatAPI:
                     "personality_changed": success
                 }), 200, 0 if TIMING_ENABLED else None  # CON TIMING
 
-            # Aggiungi il messaggio dell'utente alla cronologia
-            chat_history.append({"role": "user", "content": message})
-
             # Recupera la system instruction corretta
             system_instruction = self._get_system_instruction_for_chat(chat_id)
             
-            # Prepara i messaggi per LiteLLM (System + History)
-            messages = [{"role": "system", "content": system_instruction}] + chat_history
+            # Costruiamo il messaggio utente
+            current_user_message = {"role": "user", "content": message}
 
-            #debug
-            print(f"SYSTEM INSTRUCTION SAMPLE:\n{system_instruction[:200]}...\n")
-            print(f"MESSAGES SENT:\n{json.dumps(messages, indent=2)}")
+            # Limita la history PASSATA agli ultimi 20 messaggi (10 scambi)
+            # Facciamo lo slice PRIMA per garantire che il messaggio corrente sia sempre incluso
+            max_past_messages = 20
+            past_history_limited = chat_history[-max_past_messages:]
+            
+            # Prepara i messaggi per LiteLLM (System + Past History + Current Message)
+            messages = [{"role": "system", "content": system_instruction}] + past_history_limited + [current_user_message]
+
+            # Aggiungi il messaggio dell'utente alla cronologia COMPLETA (persistenza)
+            chat_history.append(current_user_message)
 
             # ============================================================================
             # TIMING DEBUG - Fase 5: Chiamata LLM
