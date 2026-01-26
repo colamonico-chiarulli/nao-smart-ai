@@ -11,8 +11,8 @@ Le diverse azioni sono specificate nel campo action del JSON inviato.
 @copyright	(c)2024 Rino Andriano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
 -----
-Last Modified: 	October 10th 2025, 19:00:00 pm
-Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+Last Modified: 	January 26th 2026, 13:50:00 pm
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -143,6 +143,57 @@ def create_app():
         else:
             status_code = 503 if 'instructions' in result else 200
             return jsonify({'success': False, **result}), status_code
+
+    @app.route("/chat/voice", methods=["POST"])
+    def chat_voice():
+        """
+        Endpoint combinato: STT + Chat LLM in una singola chiamata.
+        Input: audio (file OGG/WAV), chat_id (opzionale)
+        Output: Risposta LLM con trascrizione inclusa
+        """
+        # 1. Verifica presenza file audio (stesso controllo di /stt/vosk/fast)
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'Nessun file audio fornito'}), 400
+        
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'success': False, 'error': 'Nome file non valido'}), 400
+
+        # 2. Trascrizione audio -> testo (usa transcribe_ogg come /stt/vosk/fast)
+        success, stt_result = stt.transcribe_ogg(audio_file)
+        
+        if not success:
+            status_code = 503 if 'instructions' in stt_result else 400
+            return jsonify({'success': False, 'stage': 'stt', **stt_result}), status_code
+        
+        transcribed_text = stt_result.get('text', '').strip()
+        if not transcribed_text:
+            return jsonify({'success': False, 'error': 'Trascrizione vuota', 'stage': 'stt'}), 400
+
+        # 3. Prepara i dati per handle_talk_action
+        chat_data = {
+            "action": "talk",
+            "chat_id": request.form.get("chat_id"),  # Può essere None per nuove chat
+            "message": transcribed_text
+        }
+
+        # 4. Chiama handle_talk_action e ottieni la risposta
+        try:
+            response, status_code = chat_api.handle_talk_action(chat_data)
+            
+            # 5. Arricchisci la risposta con i dati della trascrizione
+            response_data = response.get_json()
+            response_data['transcription'] = transcribed_text
+            
+            return jsonify(response_data), status_code
+        except Exception as e:
+            chat_api.logger.log_error(f"Errore in chat/voice LLM: {str(e)}")
+            return jsonify({
+                'success': False, 
+                'stage': 'llm',
+                'error': str(e),
+                'transcription': transcribed_text
+            }), 500
     
     @app.route("/stt/status", methods=["GET"])
     def stt_status():
