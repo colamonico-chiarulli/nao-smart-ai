@@ -2,7 +2,7 @@
 File:    /nao-client/nao-stt-client-fast.py
 -----
 @author  Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
-@copyright    (c)2025 Nuccio Gargano
+@copyright	(c)2026 IISS Colamonico-Chiarulli Acquaviva delle Fonti (BA) Italy
 Created Date: Friday, October 10th 2025, 18:30:00 pm
 -----
 Last Modified: 	 January 22nd 2026 7:00:00 pm
@@ -377,7 +377,7 @@ class MyClass(GeneratedClass):
                         self.api_url,
                         files=files_data,
                         data=data_payload,
-                        timeout=15
+                        timeout=90
                     )
                     
                     # ============================================================================
