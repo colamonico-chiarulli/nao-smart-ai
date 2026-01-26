@@ -113,55 +113,6 @@ def create_app():
             return jsonify({"error": str(e), "success": False}), 500
 
 
-    @app.route("/chat/voice", methods=["POST"])
-    def handle_voice_chat():
-        """
-        Endpoint UNIFICATO: Audio -> STT -> LLM -> Risposta
-        Accetta 'audio' (file) e opzionalmente 'chat_id' e 'api_key'
-        """
-        # 1. Recupera chat_id se presente
-        chat_id = request.form.get('chat_id')
-        
-        # 2. Verifica presenza file audio
-        if 'audio' not in request.files:
-             return jsonify({'success': False, 'error': 'Nessun file audio fornito'}), 400
-        
-        audio_file = request.files['audio']
-        if audio_file.filename == '':
-            return jsonify({'success': False, 'error': 'Nome file non valido'}), 400
-
-        # 3. Esegui STT (usa transcribe_ogg per velocità e compatibilità con client fast)
-        stt_success, stt_result = stt.transcribe_ogg(audio_file)
-        
-        if not stt_success:
-             status_code = 503 if 'instructions' in stt_result else 200
-             return jsonify({'success': False, 'error': stt_result.get('error', 'STT Fallito')}), status_code
-
-        user_text = stt_result.get('text', '').strip()
-        if not user_text:
-             return jsonify({'success': False, 'error': 'Nessun testo rilevato', 'transcription': ''}), 200
-
-        # 4. Invia testo all'LLM usando la funzione refactorizzata
-        llm_success, llm_result, llm_status = chat_api.process_user_message(chat_id, user_text)
-
-        # 5. Costruisci risposta unificata
-        if llm_success:
-            return jsonify({
-                "success": True,
-                "transcription": user_text,
-                "chat_id": llm_result.get("chat_id", chat_id),
-                "response": llm_result.get("response", llm_result),
-                "stt_time": stt_result.get("processing_time", 0)
-            }), llm_status
-        else:
-            return jsonify({
-                "success": False,
-                "transcription": user_text,
-                "error": llm_result.get("error", "Errore LLM"),
-                "details": llm_result.get("details", "")
-            }), llm_status
-
-
     @app.route("/stt/vosk", methods=["POST"])
     def speech_to_text_vosk():
         """

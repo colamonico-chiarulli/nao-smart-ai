@@ -3,14 +3,14 @@ File:	/web_api/utils/llm_chat_api.py
 -----
 Classe LLMChatAPI - per gestire le interazioni API con vari LLM tramite LiteLLM
 Le diverse azioni sono specificate nel campo action del JSON inviato.
-api-url/chat  azioni: talk, end, hystory
-api-url/admin azioni: list-chats, delete-chats
+/gemini/chat  azioni: talk, end, hystory
+/gemini/admin azioni: list-chats, delete-chats
 ------
 @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
 @copyright	(c)2024 Rino Andriano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	December 13th 2025 07:49:59 pm
+Last Modified: 	December 11th 2025 10:30:00 am
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -159,8 +159,8 @@ class LLMChatAPI:
         # Prepara la lista delle azioni per il prompt
         actions_list_str = "\n".join(f"- {key}" for key in self.actions_map.keys())
         
-        # Completa istruzioni tecniche iniettando la lista delle chiavi delle action
-        # Usa replace perché il testo contiene JSON con parentesi graffe
+        # Formatta le istruzioni tecniche iniettando la lista
+        # Usa replace invece di format perché il testo contiene JSON con parentesi graffe
         return TECHNICAL_INSTRUCTIONS.replace("{actions_list}", actions_list_str)
 
     def _load_ai_personality(self):
@@ -434,15 +434,22 @@ class LLMChatAPI:
         
         return self.system_instruction
 
-    def process_user_message(self, chat_id, message):
-        """
-        Gestisce la logica core della conversazione.
+    def handle_talk_action(self, data):
+        """Gestisce l'azione di conversazione (talk)
         Args:
-            chat_id: ID della chat (opzionale/None)
-            message: Messaggio dell'utente
+            data -> Dizionario contenente chat_id e message
         Returns:
-            tuple: (success, result_dict, status_code)
+            Risposta JSON con l'esito della conversazione
         """
+        # Estrai e valida input
+        chat_id = data.get("chat_id")
+        message = data.get("message", "").strip()
+
+        if not message:
+            return jsonify(
+                {"error": "Un messaggio è necessario per avviare la chat", "success": False}
+            ), 400
+
         try:
             # Gestisce la chat (nuova o esistente)
             if chat_id and chat_id in self.active_chats:
@@ -480,47 +487,47 @@ class LLMChatAPI:
                     }]
 
                 # Log della risposta sistema
-                logger_msg = f"[PERSONALITY] Risposta: {response_message}"
-                self.logger.log_info(logger_msg)
-                
-                return True, {
+                self.logger.log_info(f"[PERSONALITY] Risposta: {response_message}")
+
+                return jsonify({
                     "chat_id": chat_id,
                     "response": {"chunks": chunks},
                     "success": True,
                     "personality_changed": success
-                }, 200
+                }), 200
+
+            # Aggiungi il messaggio dell'utente alla cronologia
+            chat_history.append({"role": "user", "content": message})
 
             # Recupera la system instruction corretta
             system_instruction = self._get_system_instruction_for_chat(chat_id)
             
-            # Costruiamo il messaggio utente
-            current_user_message = {"role": "user", "content": message}
+            # Prepara i messaggi per LiteLLM (System + History)
+            messages = [{"role": "system", "content": system_instruction}] + chat_history
 
-            # Limita la history PASSATA agli ultimi 20 messaggi (10 scambi)
-            # Facciamo lo slice PRIMA per garantire che il messaggio corrente sia sempre incluso
-            max_past_messages = 20
-            past_history_limited = chat_history[-max_past_messages:]
-            
-            # Prepara i messaggi per LiteLLM (System + Past History + Current Message)
-            messages = [{"role": "system", "content": system_instruction}] + past_history_limited + [current_user_message]
-
-            # Aggiungi il messaggio dell'utente alla cronologia COMPLETA (persistenza)
-            chat_history.append(current_user_message)
+            #debug
+            print(f"SYSTEM INSTRUCTION SAMPLE:\n{system_instruction[:200]}...\n")
+            print(f"MESSAGES SENT:\n{json.dumps(messages, indent=2)}")
 
             # Invia il messaggio usando LiteLLM
-            # Ottieni la chiave per questa richiesta
-            current_api_key = self._get_next_api_key()
-            
-            response = completion(
-                model=self.llm_model,
-                messages=messages,
-                api_key=current_api_key, # Passa esplicitamente la chiave ruotata
-                response_format={"type": "json_object"}, # Forza output JSON
-                temperature=GENERATION_CONFIG_BASE["temperature"],
-                top_p=GENERATION_CONFIG_BASE["top_p"],
-                max_tokens=GENERATION_CONFIG_BASE["max_output_tokens"],
-                timeout = 60 # aggiunto 60 secondi di timeout
-            )
+            try:
+                # Ottieni la chiave per questa richiesta
+                current_api_key = self._get_next_api_key()
+                
+                response = completion(
+                    model=self.llm_model,
+                    messages=messages,
+                    api_key=current_api_key, # Passa esplicitamente la chiave ruotata
+                    response_format={"type": "json_object"}, # Forza output JSON
+                    temperature=GENERATION_CONFIG_BASE["temperature"],
+                    top_p=GENERATION_CONFIG_BASE["top_p"],
+                    max_tokens=GENERATION_CONFIG_BASE["max_output_tokens"]
+                )
+            except Exception as e:
+                print(f"DEBUG: LiteLLM Error Details: {e}")
+                import traceback
+                traceback.print_exc()
+                raise e
             
             response_text = response.choices[0].message.content
             
@@ -529,55 +536,26 @@ class LLMChatAPI:
             
             # Processa la risposta
             success, result = self._process_model_response(response_text, chat_id)
-
-            return success, result, 200
-
+            
+            if success:
+                return jsonify({
+                    "chat_id": chat_id,
+                    "response": result,
+                    "success": True
+                }), 200
+            else:
+                return jsonify({
+                    "error": result["error"],
+                    "success": False
+                }), result["status_code"]
+                
         except Exception as e:
             self.logger.log_error(f"Errore nella gestione della chat: {str(e)}")
-            return False, {
-                "error": "Errore durante l'elaborazione della richiesta",
-                "details": str(e)
-            }, 500
-
-    def handle_talk_action(self, data):
-        """Gestisce l'azione di conversazione (talk) - Wrapper Flask
-        Args:
-            data -> Dizionario contenente chat_id e message
-        Returns:
-            Risposta JSON con l'esito della conversazione
-        """
-        # Estrai e valida input
-        chat_id = data.get("chat_id")
-        message = data.get("message", "").strip()
-
-        if not message:
-            return jsonify(
-                {"error": "Un messaggio è necessario per avviare la chat", "success": False}
-            ), 400
-
-        success, result, status_code = self.process_user_message(chat_id, message)
-        
-        if success:
-             # Se process_user_message ritorna un oggetto speciale (es. cambio personalità), gestiscilo
-             # Nota: process_user_message potrebbe ritornare un dict "response" già strutturato 
-             # o un dict "raw" che deve essere wrappato.
-             
-             # Caso speciale: cambio personalità ritorna già una struttura custom in 'result' 
-             # (vedi implementation di process_user_message sopra)
-             if "personality_changed" in result:
-                 return jsonify(result), status_code
-
-             return jsonify({
-                "chat_id": result.get("chat_id", chat_id), # Usa ID ritornato (se nuovo) o passato
-                "response": result.get("response", result), # Se result ha già "response", usalo, altrimenti result È la response
-                "success": True
-            }), status_code
-        else:
             return jsonify({
-                "error": result.get("error", "Errore sconosciuto"),
-                "details": result.get("details", ""),
+                "error": "Errore durante l'elaborazione della richiesta",
+                "details": str(e),
                 "success": False
-            }), status_code
+            }), 500
             
     def handle_end_action(self, data):
         """Termina una chat specifica
