@@ -66,6 +66,17 @@ except ImportError:
     Model = None
     KaldiRecognizer = None
 
+# Import timing utilities
+# ============================================================================
+# TIMING DEBUG - Commentare per disabilitare le misurazioni di timing
+# ============================================================================
+try:
+    from utils.timing_logger import TimingContext, TIMING_ENABLED
+except ImportError:
+    TIMING_ENABLED = False
+    TimingContext = None
+# ============================================================================
+
 
 class STT:
     """
@@ -413,10 +424,18 @@ class STT:
             
         Returns:
             tuple: (success, result_dict)
+            result_dict include 'timing' con audio_prep_ms e stt_ms se TIMING_ENABLED
         """
         start_time = datetime.now()
         audio_path = None
         wav_path = None
+        
+        # ============================================================================
+        # TIMING DEBUG - Variabili per misurazioni
+        # ============================================================================
+        timing_audio_prep_ms = 0
+        timing_stt_ms = 0
+        # ============================================================================
         
         # Verifica disponibilità Vosk e Pydub
         if not VOSK_AVAILABLE:
@@ -451,6 +470,12 @@ class STT:
                     os.unlink(audio_path)
                  return False, {'error': 'File audio troppo piccolo o vuoto', 'text': ''}
 
+            # ============================================================================
+            # TIMING DEBUG - Fase 3: Preparazione Audio (conversione OGG -> WAV)
+            # ============================================================================
+            audio_prep_start = datetime.now()
+            # ============================================================================
+            
             # Conversione con Pydub
             try:
                 sound = AudioSegment.from_file(audio_path)
@@ -478,6 +503,18 @@ class STT:
                 if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
                 return False, {'error': f'Errore conversione audio: {str(e)}'}
 
+            # ============================================================================
+            # TIMING DEBUG - Fine Fase 3
+            # ============================================================================
+            timing_audio_prep_ms = (datetime.now() - audio_prep_start).total_seconds() * 1000
+            # ============================================================================
+
+            # ============================================================================
+            # TIMING DEBUG - Fase 4: STT Vosk
+            # ============================================================================
+            stt_start = datetime.now()
+            # ============================================================================
+
             # Ora processa il WAV con Vosk (riutilizzando logica interna se possibile, 
             # ma qui replichiamo per semplicità o chiamiamo _process_audio)
             
@@ -493,18 +530,39 @@ class STT:
             full_text = self._process_audio(wf, framerate)
             wf.close()
             
+            # ============================================================================
+            # TIMING DEBUG - Fine Fase 4
+            # ============================================================================
+            timing_stt_ms = (datetime.now() - stt_start).total_seconds() * 1000
+            # ============================================================================
+            
             # Cleanup
             if audio_path and os.path.exists(audio_path): os.unlink(audio_path)
             if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
             
             elapsed = (datetime.now() - start_time).total_seconds()
             
+            # ============================================================================
+            # TIMING DEBUG - Prepara dati timing per la risposta
+            # ============================================================================
+            timing_data = {}
+            if TIMING_ENABLED:
+                timing_data = {
+                    'audio_prep_ms': round(timing_audio_prep_ms, 1),
+                    'stt_ms': round(timing_stt_ms, 1)
+                }
+            # ============================================================================
+            
             if full_text:
                 if self.logger:
                     word_count = len(full_text.split())
-                    self.logger.log_info(f"[STT-Fast] Trascrizione completata: '{full_text}' ({word_count} parole, {elapsed:.2f}s)")
+                    # Log con timing se abilitato
+                    if TIMING_ENABLED:
+                        self.logger.log_info(f"[STT-Fast] Trascrizione: '{full_text}' ({word_count} parole) | audio_prep: {timing_audio_prep_ms:.0f}ms, stt: {timing_stt_ms:.0f}ms, tot: {elapsed:.2f}s")
+                    else:
+                        self.logger.log_info(f"[STT-Fast] Trascrizione completata: '{full_text}' ({word_count} parole, {elapsed:.2f}s)")
 
-                return True, {
+                result = {
                     'text': full_text,
                     'language': 'it-IT',
                     'processing_time': elapsed,
@@ -512,15 +570,23 @@ class STT:
                     'word_count': len(full_text.split()),
                     'offline': True
                 }
+                # Aggiungi timing se abilitato
+                if timing_data:
+                    result['timing'] = timing_data
+                    
+                return True, result
             else:
                 if self.logger:
                     self.logger.log_warning(f"[STT-Fast] Nessun testo riconosciuto (tempo: {elapsed:.2f}s)")
 
-                return False, {
+                result = {
                     'error': 'Nessun testo riconosciuto',
                     'text': '',
                     'processing_time': elapsed
                 }
+                if timing_data:
+                    result['timing'] = timing_data
+                return False, result
 
         except Exception as e:
             if self.logger:

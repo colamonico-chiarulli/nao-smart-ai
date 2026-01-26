@@ -59,6 +59,14 @@ from utils.chat_logger import ChatLogger
 from utils.fix_movements import fix_animation
 from flask import jsonify
 
+# ============================================================================
+# TIMING DEBUG - Commentare per disabilitare le misurazioni di timing
+# ============================================================================
+from datetime import datetime
+TIMING_ENABLED = True
+# TIMING_ENABLED = False  # Decommentare questa riga per disabilitare
+# ============================================================================
+
 #Personalità di default in caso di errori
 ERROR_PERSONALITY = "Sei un robot sociale amichevole"
 
@@ -439,16 +447,18 @@ class LLMChatAPI:
         Args:
             data -> Dizionario contenente chat_id e message
         Returns:
-            Risposta JSON con l'esito della conversazione
+            Tuple (response_json, status_code, timing_ms) se TIMING_ENABLED
+            Tuple (response_json, status_code) altrimenti
         """
         # Estrai e valida input
         chat_id = data.get("chat_id")
         message = data.get("message", "").strip()
 
         if not message:
+            # ORIGINALE: ), 400
             return jsonify(
                 {"error": "Un messaggio è necessario per avviare la chat", "success": False}
-            ), 400
+            ), 400, 0 if TIMING_ENABLED else None  # CON TIMING
 
         try:
             # Gestisce la chat (nuova o esistente)
@@ -489,12 +499,13 @@ class LLMChatAPI:
                 # Log della risposta sistema
                 self.logger.log_info(f"[PERSONALITY] Risposta: {response_message}")
 
+                # ORIGINALE: }), 200
                 return jsonify({
                     "chat_id": chat_id,
                     "response": {"chunks": chunks},
                     "success": True,
                     "personality_changed": success
-                }), 200
+                }), 200, 0 if TIMING_ENABLED else None  # CON TIMING
 
             # Aggiungi il messaggio dell'utente alla cronologia
             chat_history.append({"role": "user", "content": message})
@@ -509,6 +520,12 @@ class LLMChatAPI:
             print(f"SYSTEM INSTRUCTION SAMPLE:\n{system_instruction[:200]}...\n")
             print(f"MESSAGES SENT:\n{json.dumps(messages, indent=2)}")
 
+            # ============================================================================
+            # TIMING DEBUG - Fase 5: Chiamata LLM
+            # ============================================================================
+            llm_start = datetime.now() if TIMING_ENABLED else None
+            # ============================================================================
+            
             # Invia il messaggio usando LiteLLM
             try:
                 # Ottieni la chiave per questa richiesta
@@ -529,6 +546,14 @@ class LLMChatAPI:
                 traceback.print_exc()
                 raise e
             
+            # ============================================================================
+            # TIMING DEBUG - Fine Fase 5
+            # ============================================================================
+            llm_ms = (datetime.now() - llm_start).total_seconds() * 1000 if TIMING_ENABLED else 0
+            if TIMING_ENABLED:
+                self.logger.log_info(f"[LLM] Risposta ottenuta in {llm_ms:.0f}ms")
+            # ============================================================================
+            
             response_text = response.choices[0].message.content
             
             # Aggiunge la risposta del modello alla cronologia
@@ -538,24 +563,27 @@ class LLMChatAPI:
             success, result = self._process_model_response(response_text, chat_id)
             
             if success:
+                # ORIGINALE: }), 200
                 return jsonify({
                     "chat_id": chat_id,
                     "response": result,
                     "success": True
-                }), 200
+                }), 200, llm_ms if TIMING_ENABLED else None  # CON TIMING
             else:
+                # ORIGINALE: }), result["status_code"]
                 return jsonify({
                     "error": result["error"],
                     "success": False
-                }), result["status_code"]
+                }), result["status_code"], 0 if TIMING_ENABLED else None  # CON TIMING
                 
         except Exception as e:
             self.logger.log_error(f"Errore nella gestione della chat: {str(e)}")
+            # ORIGINALE: }), 500
             return jsonify({
                 "error": "Errore durante l'elaborazione della richiesta",
                 "details": str(e),
                 "success": False
-            }), 500
+            }), 500, 0 if TIMING_ENABLED else None  # CON TIMING
             
     def handle_end_action(self, data):
         """Termina una chat specifica

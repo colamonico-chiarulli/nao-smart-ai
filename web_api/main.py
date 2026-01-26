@@ -47,6 +47,12 @@ from flask_cors import CORS
 from utils.llm_chat_api import LLMChatAPI
 from utils.stt import STT
 
+# ============================================================================
+# TIMING DEBUG - Commentare per disabilitare le misurazioni di timing
+# ============================================================================
+from utils.timing_logger import timing_logger, TIMING_ENABLED
+# ============================================================================
+
 
 def create_app():
     """
@@ -150,6 +156,7 @@ def create_app():
         Endpoint combinato: STT + Chat LLM in una singola chiamata.
         Input: audio (file OGG/WAV), chat_id (opzionale)
         Output: Risposta LLM con trascrizione inclusa
+        Include timing statistics se TIMING_ENABLED
         """
         # 1. Verifica presenza file audio (stesso controllo di /stt/vosk/fast)
         if 'audio' not in request.files:
@@ -159,8 +166,21 @@ def create_app():
         if audio_file.filename == '':
             return jsonify({'success': False, 'error': 'Nome file non valido'}), 400
 
+        # ============================================================================
+        # TIMING DEBUG - Inizializza raccolta timing
+        # ============================================================================
+        timing_data = {} if TIMING_ENABLED else None
+        # ============================================================================
+
         # 2. Trascrizione audio -> testo (usa transcribe_ogg come /stt/vosk/fast)
         success, stt_result = stt.transcribe_ogg(audio_file)
+        
+        # ============================================================================
+        # TIMING DEBUG - Raccoglie timing da STT (audio_prep_ms, stt_ms)
+        # ============================================================================
+        if TIMING_ENABLED and 'timing' in stt_result:
+            timing_data.update(stt_result['timing'])
+        # ============================================================================
         
         if not success:
             status_code = 503 if 'instructions' in stt_result else 400
@@ -179,11 +199,42 @@ def create_app():
 
         # 4. Chiama handle_talk_action e ottieni la risposta
         try:
-            response, status_code = chat_api.handle_talk_action(chat_data)
+            # ============================================================================
+            # TIMING DEBUG - handle_talk_action ora restituisce 3 valori con TIMING_ENABLED
+            # ============================================================================
+            # ORIGINALE:
+            # response, status_code = chat_api.handle_talk_action(chat_data)
+            # CON TIMING:
+            result = chat_api.handle_talk_action(chat_data)
+            
+            # Gestisci il nuovo formato con 3 elementi
+            if len(result) == 3:
+                response, status_code, llm_ms = result
+                if TIMING_ENABLED and llm_ms is not None:
+                    timing_data['llm_ms'] = round(llm_ms, 1)
+            else:
+                response, status_code = result
+            # ============================================================================
             
             # 5. Arricchisci la risposta con i dati della trascrizione
             response_data = response.get_json()
             response_data['transcription'] = transcribed_text
+            
+            # ============================================================================
+            # TIMING DEBUG - Aggiungi timing alla risposta e registra su CSV
+            # ============================================================================
+            if TIMING_ENABLED and timing_data:
+                response_data['timing'] = timing_data
+                # Registra su CSV
+                timing_logger.record_timing({
+                    'chat_id': response_data.get('chat_id', ''),
+                    'audio_prep_ms': timing_data.get('audio_prep_ms', 0),
+                    'stt_ms': timing_data.get('stt_ms', 0),
+                    'llm_ms': timing_data.get('llm_ms', 0),
+                    'transcription_length': len(transcribed_text),
+                    'response_length': len(str(response_data.get('response', '')))
+                })
+            # ============================================================================
             
             return jsonify(response_data), status_code
         except Exception as e:
@@ -192,8 +243,29 @@ def create_app():
                 'success': False, 
                 'stage': 'llm',
                 'error': str(e),
-                'transcription': transcribed_text
+                 'transcription': transcribed_text
             }), 500
+    
+    # ============================================================================
+    # TIMING DEBUG - Endpoint per statistiche aggregate
+    # ============================================================================
+    @app.route("/timing/stats", methods=["GET"])
+    def timing_stats():
+        """
+        Endpoint per visualizzare statistiche di timing aggregate.
+        Query params:
+            - last_n: Numero di richieste da analizzare (default: 100)
+        """
+        last_n = request.args.get('last_n', 100, type=int)
+        stats = timing_logger.get_stats_summary(last_n)
+        return jsonify(stats), 200
+    
+    @app.route("/timing/clear", methods=["POST"])
+    def timing_clear():
+        """Resetta le statistiche in memoria (non cancella il CSV)"""
+        timing_logger.clear_stats()
+        return jsonify({'success': True, 'message': 'Statistiche resettate'}), 200
+    # ============================================================================
     
     @app.route("/stt/status", methods=["GET"])
     def stt_status():

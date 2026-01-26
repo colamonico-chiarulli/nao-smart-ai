@@ -74,6 +74,14 @@ class MyClass(GeneratedClass):
         self.prebuffer_seconds = 0.8
         self.chat_id = None # Maintain chat_id session
 
+        # ============================================================================
+        # TIMING DEBUG - Commentare per disabilitare le misurazioni di timing
+        # ============================================================================
+        self.timing_enabled = True
+        # self.timing_enabled = False  # Decommentare questa riga per disabilitare
+        self.timing_stats = {}  # Dizionario per statistiche timing
+        # ============================================================================
+
 
     def onLoad(self):
         """Inizializzazione del box"""
@@ -174,6 +182,13 @@ class MyClass(GeneratedClass):
             self.speech_detected_time = None
             self.last_speech_time = None
             self.listen_off_time = None
+            
+            # ============================================================================
+            # TIMING DEBUG - Fase 1: Inizio registrazione
+            # ============================================================================
+            if self.timing_enabled:
+                self.timing_stats = {'recording_start': time.time()}
+            # ============================================================================
 
             # Avvia registrazione in OGG
             # NAO 6 supports "ogg" format natively
@@ -202,6 +217,15 @@ class MyClass(GeneratedClass):
                 return
             try:
                 self.audio_recorder.stopMicrophonesRecording()
+                
+                # ============================================================================
+                # TIMING DEBUG - Fine Fase 1: Registrazione
+                # ============================================================================
+                if self.timing_enabled and 'recording_start' in self.timing_stats:
+                    self.timing_stats['recording_end'] = time.time()
+                    self.timing_stats['recording_ms'] = (self.timing_stats['recording_end'] - self.timing_stats['recording_start']) * 1000
+                # ============================================================================
+                
             except Exception as e:
                 self.logger.error("Errore stop registrazione: " + str(e))
             finally:
@@ -341,6 +365,13 @@ class MyClass(GeneratedClass):
                     if self.chat_id:
                         data_payload['chat_id'] = self.chat_id
 
+                    # ============================================================================
+                    # TIMING DEBUG - Fase 2: Inizio invio audio
+                    # ============================================================================
+                    if self.timing_enabled:
+                        self.timing_stats['send_start'] = time.time()
+                    # ============================================================================
+
                     # Invia al server
                     response = req_module.post(
                         self.api_url,
@@ -348,6 +379,14 @@ class MyClass(GeneratedClass):
                         data=data_payload,
                         timeout=15
                     )
+                    
+                    # ============================================================================
+                    # TIMING DEBUG - Fine Fase 2: Network RTT
+                    # ============================================================================
+                    if self.timing_enabled and 'send_start' in self.timing_stats:
+                        self.timing_stats['send_end'] = time.time()
+                        self.timing_stats['network_rtt_ms'] = (self.timing_stats['send_end'] - self.timing_stats['send_start']) * 1000
+                    # ============================================================================
 
                 if response.status_code == 200:
                     result = response.json()
@@ -370,6 +409,14 @@ class MyClass(GeneratedClass):
                         # 3. Check for Transcription (Old Flow or logging)
                         # Even in new flow, we might want to log user text
                         transcription = result.get('transcription', result.get('text', '')).strip()
+                        
+                        # ============================================================================
+                        # TIMING DEBUG - Raccoglie timing dal server e logga tutto
+                        # ============================================================================
+                        if self.timing_enabled:
+                            server_timing = result.get('timing', {})
+                            self._log_timing_stats(server_timing)
+                        # ============================================================================
                         
                         if transcription:
                              # If NO response key was present, we MUST trigger the old signal
@@ -403,7 +450,43 @@ class MyClass(GeneratedClass):
             self.logger.error("Errore generico esterno: " + str(e))
             self.onTranscriptionFailed()
 
+    # ============================================================================
+    # TIMING DEBUG - Metodo per loggare tutte le statistiche di timing
+    # ============================================================================
+    def _log_timing_stats(self, server_timing):
+        """Logga le statistiche di timing in formato leggibile"""
+        if not self.timing_enabled:
+            return
+            
+        self.logger.info("=== TIMING STATS ===")
+        
+        # Timing client
+        recording_ms = self.timing_stats.get('recording_ms', 0)
+        network_ms = self.timing_stats.get('network_rtt_ms', 0)
+        
+        self.logger.info("[CLIENT] Registrazione: " + str(int(recording_ms)) + "ms")
+        self.logger.info("[CLIENT] Network RTT: " + str(int(network_ms)) + "ms")
+        
+        # Timing server (ricevuti dalla risposta)
+        audio_prep_ms = server_timing.get('audio_prep_ms', 0)
+        stt_ms = server_timing.get('stt_ms', 0)
+        llm_ms = server_timing.get('llm_ms', 0)
+        
+        self.logger.info("[SERVER] Audio Prep: " + str(int(audio_prep_ms)) + "ms")
+        self.logger.info("[SERVER] STT: " + str(int(stt_ms)) + "ms")
+        self.logger.info("[SERVER] LLM: " + str(int(llm_ms)) + "ms")
+        
+        # Totali
+        server_total = audio_prep_ms + stt_ms + llm_ms
+        total = recording_ms + network_ms
+        
+        self.logger.info("[SERVER] Totale: " + str(int(server_total)) + "ms")
+        self.logger.info("[TOTALE] End-to-End: " + str(int(total)) + "ms (escluso TTS)")
+        self.logger.info("===================")
+    # ============================================================================
+
     def onInput_onStop(self):
         """Ferma il box"""
         self.onUnload()
         self.onStopped()
+
