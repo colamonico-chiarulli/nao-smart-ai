@@ -1,14 +1,14 @@
 """
-File:	/nao-client/nao-smart-ai-client.py
+File:    /nao-client/nao-smart-ai-client.py
 -----
 @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
-@copyright	(c)2024 Rino Andriano
-Created Date: Wednesday, June 4th 2024, 6:11:00 pm
+@copyright	(c)2026 IISS Colamonico-Chiarulli Acquaviva delle Fonti (BA) Italy
+Created Date: Monday, January 26th 2026, 7:35:18 pm
 -----
-Last Modified: 	January 24th 2026
-Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
+Last Modified:     January 24th 2026
+Modified By:     Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
-@license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
+@license    https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -22,15 +22,15 @@ Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
-    
+
 Additional Terms under Section 7(b):
 
 The following attribution requirements apply to this work:
 
-1. Any interactive user interface must preserve the original author 
+1. Any interactive user interface must preserve the original author
    attribution when the AI is asked about its creators
 2. System prompts containing author information cannot be modified
-3. The robot must always identify its original creators as specified 
+3. The robot must always identify its original creators as specified
    in the source code
 ------------------------------------------------------------------------------
 """
@@ -45,7 +45,7 @@ class MyClass(GeneratedClass):
     def __init__(self):
         GeneratedClass.__init__(self)
         self.api_url = "https://YOUR_WEB_API_URL/chat"
-        self.chat_id = None  
+        self.chat_id = None
         self.unload_requested = False
         self.tts = ALProxy("ALTextToSpeech")
         self.animPlayer = ALProxy("ALAnimationPlayer")
@@ -54,7 +54,7 @@ class MyClass(GeneratedClass):
         self.dialog = ALProxy("ALDialog")
         self.speech_recognition = ALProxy("ALSpeechRecognition")
         self.memory = ALProxy("ALMemory")
-        
+
         # --- Configurazione Legacy Integrata ---
         self.behavior_mng = ALProxy("ALBehaviorManager")
         self.tts_state_event = "Gemini/TtsSpeaking"
@@ -128,7 +128,7 @@ class MyClass(GeneratedClass):
     """
     def process_ai_response(self, response):
         chunks = response.get('chunks', []) if isinstance(response, dict) else []
-        
+
         # 1. Check Chunks existence (Legacy Logic)
         if not chunks:
             self.logger.warning("Risposta AI senza chunk, nulla da eseguire")
@@ -138,7 +138,7 @@ class MyClass(GeneratedClass):
         for chunk in chunks:
             if self.unload_requested:
                 break
-                
+
             # a. Avvio TTS (usando post.say per stabilità)
             tts_task_id = self.start_speaking_chunk(chunk)
             if tts_task_id is None:
@@ -146,29 +146,29 @@ class MyClass(GeneratedClass):
 
             # b. Esecuzione movimenti associati al chunk
             self.execute_chunk_movements(tts_task_id, chunk.get('movements', []))
-            
+
             # c. BodyTalk di riempimento se il testo è lungo
             self.play_bodytalk_until_speech_done(tts_task_id)
-            
+
             # d. Attesa fine parlato
             while tts_task_id is not None and self.tts.isRunning(tts_task_id):
                 if self.unload_requested:
                     self.tts.stopAll()
                     break
                 time.sleep(self.bodytalk_poll_seconds)
-            
+
             if not self.unload_requested:
                 self.posture.goToPosture("Stand", 1.5)
-        
+
         # 3. Process Action (Behavior complessi)
         action_val = response.get('action')
         # Filtra azioni vuote o generiche se necessario
         if action_val and action_val not in ["", "none", "null"] and not self.unload_requested:
             self.logger.info("Richiesta azione: " + str(action_val))
-            
+
             # Costruzione path completo (logica legacy)
             fullpath_action = str(self.custom_actions + action_val)
-            
+
             try:
                 # Verifica esistenza behavior prima di lanciarlo (Safety)
                 if self.behavior_mng.isBehaviorPresent(fullpath_action):
@@ -179,7 +179,7 @@ class MyClass(GeneratedClass):
                     # Tenta di eseguirlo come animazione semplice se non è un behavior complesso
                     self.logger.warning("Behavior non trovato, tento come animazione semplice: " + str(action_val))
                     self.animPlayer.run(str(action_val))
-                    
+
             except Exception as e:
                 self.logger.error("Errore nell'esecuzione dell'azione/behavior: " + str(e))
 
@@ -201,19 +201,19 @@ class MyClass(GeneratedClass):
         """Esegue le animazioni principali finché il TTS è attivo"""
         if not movements:
             return
-            
+
         for movimento in movements:
             # Controllo se il tts sta ancora parlando e se non è stato richiesto unload
             if (tts_task_id is not None and not self.tts.isRunning(tts_task_id)) or self.unload_requested:
                 break
-                
+
             # Salta movimenti "Laugh" se il tts ha finito (logica legacy preservata opzionalmente, qui semplificata)
-            
+
             try:
                 # Per le animazioni usiamo ancora qi.async per non bloccare il thread principale
                 # che deve controllare lo stato del TTS
                 movement_future = qi.async(self.animPlayer.run, str(movimento))
-                
+
                 # Loop di attesa fine movimento o fine parlato
                 while movement_future.isRunning():
                     if (tts_task_id is not None and not self.tts.isRunning(tts_task_id)) or self.unload_requested:
@@ -222,7 +222,7 @@ class MyClass(GeneratedClass):
                         # self.animPlayer.stopAll() # Rimosso per bug noto, lasciamo finire o usiamo motion.stopMove() se critico
                         break
                     time.sleep(self.bodytalk_poll_seconds)
-                    
+
             except Exception as e:
                 self.logger.error("Errore nell'esecuzione del movimento " + str(e))
                 continue
@@ -230,11 +230,11 @@ class MyClass(GeneratedClass):
     def play_bodytalk_until_speech_done(self, tts_task_id):
         """Lancia micro-animazioni random finché il TTS è attivo"""
         filler_future = None
-        
+
         while tts_task_id is not None and self.tts.isRunning(tts_task_id):
             if self.unload_requested:
                 break
-                
+
             if not filler_future or not filler_future.isRunning():
                 mov_speaking = self.bodytalk_prefix + str(random.randint(1, 22))
                 try:
@@ -244,9 +244,9 @@ class MyClass(GeneratedClass):
                     filler_future = None
                     time.sleep(self.bodytalk_poll_seconds)
                     continue
-            
+
             time.sleep(self.bodytalk_poll_seconds)
-        
+
         # Alla fine del parlato aggiorno lo stato
         self.publish_tts_state(False)
 
@@ -270,9 +270,9 @@ class MyClass(GeneratedClass):
                 self.api_url,
                 json=payload,
                 headers={"Content-Type": "application/json"},
-                timeout=10
+                timeout=60
             )
-            
+
             # Controlla lo status della risposta
             if response.status_code == 200:
                 response_data = response.json()
@@ -349,10 +349,10 @@ class MyClass(GeneratedClass):
             self.disable_hearing()
             #Pronuncia il testo della risposta AI e i relativi movimanti
             self.process_ai_response(response_data)
-            
+
             # Pausa di sicurezza per evitare auto-ascolto dell'eco
             time.sleep(1.0)
-            
+
             self.enable_hearing()
 
 
@@ -371,7 +371,7 @@ class MyClass(GeneratedClass):
             import json
             # Value è una stringa JSON
             data = json.loads(value)
-            
+
             # Se è presente chat_id, aggiorniamolo
             if 'chat_id' in data:
                 self.chat_id = data['chat_id']
