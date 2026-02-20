@@ -11,8 +11,8 @@ Le diverse azioni sono specificate nel campo action del JSON inviato.
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Saturday, November 9th 2024, 6:37:29 pm
 -----
-Last Modified: 	October 10th 2025, 19:00:00 pm
-Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+Last Modified: 	February 21st 2026, 11:54:00 am
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -50,6 +50,8 @@ from flask_cors import CORS
 # from utils.gemini_chat_api import GeminiChatAPI
 from utils.llm_chat_api import LLMChatAPI
 from utils.stt import STT
+
+
 
 
 def create_app():
@@ -139,14 +141,82 @@ def create_app():
         if audio_file.filename == '':
             return jsonify({'success': False, 'error': 'Nome file non valido'}), 400
 
+        # Estrai metadata opzionali per Smart Trim
+        timing_metadata = {}
+        if 'recording_start' in request.form:
+            timing_metadata['recording_start'] = request.form['recording_start']
+        if 'speech_detected' in request.form:
+             timing_metadata['speech_detected'] = request.form['speech_detected']
+
         # Usa la nuova funzione transcribe_ogg
-        success, result = stt.transcribe_ogg(audio_file)
+        success, result = stt.transcribe_ogg(audio_file, timing_metadata)
         
         if success:
             return jsonify({'success': True, **result}), 200
         else:
             status_code = 503 if 'instructions' in result else 200
             return jsonify({'success': False, **result}), status_code
+
+    @app.route("/chat/voice", methods=["POST"])
+    def chat_voice():
+        """
+        Endpoint combinato: STT + Chat LLM in una singola chiamata.
+        Input: audio (file OGG/WAV), chat_id (opzionale)
+        Output: Risposta LLM con trascrizione inclusa
+        Include timing statistics se TIMING_ENABLED
+        """
+        # 1. Verifica presenza file audio (stesso controllo di /stt/vosk/fast)
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'error': 'Nessun file audio fornito'}), 400
+        
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'success': False, 'error': 'Nome file non valido'}), 400
+
+        # 2. Estrai metadata opzionali per Smart Trim
+        timing_metadata = {}
+        if 'recording_start' in request.form:
+            timing_metadata['recording_start'] = request.form['recording_start']
+        if 'speech_detected' in request.form:
+            timing_metadata['speech_detected'] = request.form['speech_detected']
+
+        # Trascrizione audio -> testo (usa transcribe_ogg come /stt/vosk/fast)
+        success, stt_result = stt.transcribe_ogg(audio_file, timing_metadata)
+               
+        if not success:
+            status_code = 503 if 'instructions' in stt_result else 400
+            return jsonify({'success': False, 'stage': 'stt', **stt_result}), status_code
+        
+        transcribed_text = stt_result.get('text', '').strip()
+        if not transcribed_text:
+            return jsonify({'success': False, 'error': 'Trascrizione vuota', 'stage': 'stt'}), 400
+
+        # 3. Prepara i dati per handle_talk_action
+        chat_data = {
+            "action": "talk",
+            "chat_id": request.form.get("chat_id"),  # Può essere None per nuove chat
+            "message": transcribed_text
+        }
+
+        # 4. Chiama handle_talk_action e ottieni la risposta
+        try:
+
+            response, status_code = chat_api.handle_talk_action(chat_data)
+            
+            # 5. Arricchisci la risposta con i dati della trascrizione
+            response_data = response.get_json()
+            response_data['transcription'] = transcribed_text         
+            return jsonify(response_data), status_code
+        except Exception as e:
+            chat_api.logger.log_error(f"Errore in chat/voice LLM: {str(e)}")
+            return jsonify({
+                'success': False, 
+                'stage': 'llm',
+                'error': str(e),
+                 'transcription': transcribed_text
+            }), 500
+    
+
     
     @app.route("/stt/status", methods=["GET"])
     def stt_status():
