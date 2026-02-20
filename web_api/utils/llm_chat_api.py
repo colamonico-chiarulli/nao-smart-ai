@@ -3,14 +3,14 @@ File:	/web_api/utils/llm_chat_api.py
 -----
 Classe LLMChatAPI - per gestire le interazioni API con vari LLM tramite LiteLLM
 Le diverse azioni sono specificate nel campo action del JSON inviato.
-api-url/chat  azioni: talk, end, hystory
-api-url/admin azioni: list-chats, delete-chats
+/gemini/chat  azioni: talk, end, hystory
+/gemini/admin azioni: list-chats, delete-chats
 ------
 @author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	December 13th 2025 07:49:59 pm
+Last Modified: 	February 21st 2026, 11:54:00 am
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -443,13 +443,15 @@ class LLMChatAPI:
         Args:
             data -> Dizionario contenente chat_id e message
         Returns:
-            Risposta JSON con l'esito della conversazione
+            Tuple (response_json, status_code, timing_ms) se TIMING_ENABLED
+            Tuple (response_json, status_code) altrimenti
         """
         # Estrai e valida input
         chat_id = data.get("chat_id")
         message = data.get("message", "").strip()
 
         if not message:
+            # ORIGINALE: ), 400
             return jsonify(
                 {"error": "Un messaggio è necessario per avviare la chat", "success": False}
             ), 400
@@ -493,6 +495,7 @@ class LLMChatAPI:
                 # Log della risposta sistema
                 self.logger.log_info(f"[PERSONALITY] Risposta: {response_message}")
 
+                # ORIGINALE: }), 200
                 return jsonify({
                     "chat_id": chat_id,
                     "response": {"chunks": chunks},
@@ -516,21 +519,26 @@ class LLMChatAPI:
 
             # Aggiungi il messaggio dell'utente alla cronologia COMPLETA (persistenza)
             chat_history.append(current_user_message)
-
+            
             # Invia il messaggio usando LiteLLM
-            # Ottieni la chiave per questa richiesta
-            current_api_key = self._get_next_api_key()
-            
-            response = completion(
-                model=self.llm_model,
-                messages=messages,
-                api_key=current_api_key, # Passa esplicitamente la chiave ruotata
-                response_format={"type": "json_object"}, # Forza output JSON
-                temperature=GENERATION_CONFIG_BASE["temperature"],
-                top_p=GENERATION_CONFIG_BASE["top_p"],
-                max_tokens=GENERATION_CONFIG_BASE["max_output_tokens"]
-            )
-            
+            try:
+                # Ottieni la chiave per questa richiesta
+                current_api_key = self._get_next_api_key()
+                
+                response = completion(
+                    model=self.llm_model,
+                    messages=messages,
+                    api_key=current_api_key, # Passa esplicitamente la chiave ruotata
+                    response_format={"type": "json_object"}, # Forza output JSON
+                    temperature=GENERATION_CONFIG_BASE["temperature"],
+                    top_p=GENERATION_CONFIG_BASE["top_p"],
+                    max_tokens=GENERATION_CONFIG_BASE["max_output_tokens"]
+                )
+            except Exception as e:
+                self.logger.log_error(f"DEBUG: LiteLLM Error Details: {e}")
+                import traceback
+                traceback.print_exc()
+                raise e                      
             response_text = response.choices[0].message.content
             
             # Aggiunge la risposta del modello alla cronologia
@@ -540,12 +548,14 @@ class LLMChatAPI:
             success, result = self._process_model_response(response_text, chat_id)
             
             if success:
+                # ORIGINALE: }), 200
                 return jsonify({
                     "chat_id": chat_id,
                     "response": result,
                     "success": True
                 }), 200
             else:
+                # ORIGINALE: }), result["status_code"]
                 return jsonify({
                     "error": result["error"],
                     "success": False
@@ -553,6 +563,7 @@ class LLMChatAPI:
                 
         except Exception as e:
             self.logger.log_error(f"Errore nella gestione della chat: {str(e)}")
+            # ORIGINALE: }), 500
             return jsonify({
                 "error": "Errore durante l'elaborazione della richiesta",
                 "details": str(e),

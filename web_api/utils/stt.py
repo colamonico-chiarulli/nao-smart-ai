@@ -1,5 +1,5 @@
 """
-File:	/web_api/utils/stt_vosk.py
+File:	/web_api/utils/stt.py
 -----
 Classe VoskSTT - Speech-to-Text con Vosk per NAO Robot
 -----
@@ -7,8 +7,8 @@ Classe VoskSTT - Speech-to-Text con Vosk per NAO Robot
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Friday, October 10th 2025, 18:30:00 pm
 -----
-Last Modified: 	October 10th 2025, 19:00:00 pm
-Modified By: 	Nuccio Gargano <v.gargano@colamonicochiarulli.edu.it>
+Last Modified: 	February 21st 2026, 11:54:00 am
+Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
 
@@ -42,6 +42,7 @@ For full Additional Terms see the LICENSE file.
 """
 
 import os
+import io
 import json
 import wave
 import tempfile
@@ -69,7 +70,6 @@ except ImportError:
     VOSK_AVAILABLE = False
     Model = None
     KaldiRecognizer = None
-
 
 class STT:
     """
@@ -407,21 +407,22 @@ class STT:
                 'error': f'Errore server: {str(e)}'
             }
     
-    def transcribe_ogg(self, audio_file):
+    def transcribe_ogg(self, audio_file, timing_metadata=None):
         """
         Trascrive un file audio OGG (o altro formato supportato da ffmpeg)
         convertendolo prima in WAV mono 16kHz per Vosk.
+        Esegue Smart Trim se timing_metadata è fornito.
         
         Args:
             audio_file: File audio da Flask request.files
+            timing_metadata: Dict opzionale con 'recording_start' e 'speech_detected' (timestamp float)
             
         Returns:
             tuple: (success, result_dict)
+            result_dict include 'timing' con audio_prep_ms e stt_ms se TIMING_ENABLED
         """
         start_time = datetime.now()
-        audio_path = None
-        wav_path = None
-        
+
         # Verifica disponibilità Vosk e Pydub
         if not VOSK_AVAILABLE:
             return False, {
@@ -442,73 +443,84 @@ class STT:
             }
             
         try:
-            # Salva file temporaneo originale (OGG)
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_audio:
-                audio_path = temp_audio.name
-                audio_file.save(audio_path)
-                file_size = os.path.getsize(audio_path)
+            # Leggi il contenuto del file in memoria
+            audio_data = audio_file.read()
+            file_size = len(audio_data)
             
             if file_size < 100: # OGG può essere piccolo ma valido, ma < 100 byte è sospetto
                  if self.logger:
                     self.logger.log_warning(f"[STT-Fast] File audio troppo piccolo: {file_size} bytes")
-                 if audio_path and os.path.exists(audio_path):
-                    os.unlink(audio_path)
                  return False, {'error': 'File audio troppo piccolo o vuoto', 'text': ''}
-
-            # Conversione con Pydub
+          
+            # Conversione con Pydub (In-Memory)
             try:
-                sound = AudioSegment.from_file(audio_path)
+                # Carica da bytes (in-memory)
+                sound = AudioSegment.from_file(io.BytesIO(audio_data))
                 
                 # Log parametri audio originale
                 if self.logger:
-                    self.logger.log_info(f"[STT-Fast] Audio originale - Sample rate: {sound.frame_rate}Hz, Canali: {sound.channels}, Durata: {len(sound)/1000:.2f}s, Bitrate: {sound.sample_width*8}bit")
+                    self.logger.log_info(f"[STT-Fast] Audio Rx - {sound.frame_rate}Hz, {sound.channels}ch, {len(sound)/1000:.2f}s")
+                
+                # --- SMART TRIM LOGIC ---
+                if timing_metadata and 'recording_start' in timing_metadata and 'speech_detected' in timing_metadata:
+                    try:
+                        rec_start = float(timing_metadata['recording_start'])
+                        speech_det = float(timing_metadata['speech_detected'])
+                        
+                        # Calcola il silenzio iniziale (differenza tra start registrazione e speech detection)
+                        silence_duration_sec = speech_det - rec_start
+                        
+                        # Definisci un pre-buffer (es. 0.5s) per non tagliare l'attacco della parola
+                        prebuffer_sec = 0.5
+                        cut_start_sec = max(0, silence_duration_sec - prebuffer_sec)
+                        cut_start_ms = int(cut_start_sec * 1000)
+                        
+                        if cut_start_ms > 0:
+                            original_len = len(sound)
+                            # Esegui il taglio in pydub (lavora in ms)
+                            sound = sound[cut_start_ms:]
+                            if self.logger:
+                                self.logger.log_info(f"[STT-Fast] Smart Trim: tagliati {cut_start_ms}ms iniziali (Orig: {original_len}ms -> New: {len(sound)}ms)")
+                        else:
+                            if self.logger:
+                                self.logger.log_info(f"[STT-Fast] Smart Trim: taglio non necessario (silenzio < prebuffer)")
+                    except Exception as e_trim:
+                         if self.logger:
+                            self.logger.log_warning(f"[STT-Fast] Errore Smart Trim: {e_trim}")
                 
                 # Converti a 16kHz, Mono, 16bit (default di export wav è 16bit)
                 sound = sound.set_frame_rate(16000).set_channels(1)
                 
-                if self.logger:
-                    self.logger.log_info(f"[STT-Fast] Audio convertito - Sample rate: {sound.frame_rate}Hz, Canali: {sound.channels}, Durata: {len(sound)/1000:.2f}s")
-                
-                # Esporta in WAV temporaneo
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_wav:
-                    wav_path = temp_wav.name
-                    sound.export(wav_path, format="wav")
+                # Esporta in WAV buffer (In-Memory)
+                wav_buffer = io.BytesIO()
+                sound.export(wav_buffer, format="wav")
+                wav_buffer.seek(0)
                     
             except Exception as e:
                 if self.logger:
-                    self.logger.log_error(f"[STT-Fast] Errore conversione audio: {str(e)}")
-                # Cleanup
-                if audio_path and os.path.exists(audio_path): os.unlink(audio_path)
-                if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
+                    self.logger.log_error(f"[STT-Fast] Errore preparazione audio: {str(e)}")
                 return False, {'error': f'Errore conversione audio: {str(e)}'}
 
-            # Ora processa il WAV con Vosk (riutilizzando logica interna se possibile, 
-            # ma qui replichiamo per semplicità o chiamiamo _process_audio)
-            
+            # Ora processa il WAV buffer con Vosk
             try:
-                wf = wave.open(wav_path, "rb")
+                wf = wave.open(wav_buffer, "rb")
             except wave.Error as e:
-                 # Cleanup
-                if audio_path and os.path.exists(audio_path): os.unlink(audio_path)
-                if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
-                return False, {'error': f'File WAV convertito non valido: {str(e)}'}
+                return False, {'error': f'WAV buffer non valido: {str(e)}'}
 
             framerate = wf.getframerate()
             full_text = self._process_audio(wf, framerate)
             wf.close()
             
-            # Cleanup
-            if audio_path and os.path.exists(audio_path): os.unlink(audio_path)
-            if wav_path and os.path.exists(wav_path): os.unlink(wav_path)
-            
-            elapsed = (datetime.now() - start_time).total_seconds()
-            
+            # Close buffer
+            wav_buffer.close()
+            elapsed = (datetime.now() - start_time).total_seconds()     
+           
             if full_text:
                 if self.logger:
                     word_count = len(full_text.split())
                     self.logger.log_info(f"[STT-Fast] Trascrizione completata: '{full_text}' ({word_count} parole, {elapsed:.2f}s)")
 
-                return True, {
+                result = {
                     'text': full_text,
                     'language': 'it-IT',
                     'processing_time': elapsed,
@@ -516,27 +528,22 @@ class STT:
                     'word_count': len(full_text.split()),
                     'offline': True
                 }
+                    
+                return True, result
             else:
                 if self.logger:
                     self.logger.log_warning(f"[STT-Fast] Nessun testo riconosciuto (tempo: {elapsed:.2f}s)")
 
-                return False, {
+                result = {
                     'error': 'Nessun testo riconosciuto',
                     'text': '',
                     'processing_time': elapsed
                 }
+                return False, result
 
         except Exception as e:
             if self.logger:
                 self.logger.log_error(f"[STT-Fast] Errore generico: {str(e)}")
-            # Cleanup
-            if audio_path and os.path.exists(audio_path): 
-                try: os.unlink(audio_path) 
-                except: pass
-            if wav_path and os.path.exists(wav_path):
-                try: os.unlink(wav_path)
-                except: pass
-                
             return False, {'error': f'Errore server: {str(e)}'}
 
     def handle_stt_request(self):
