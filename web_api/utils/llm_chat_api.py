@@ -341,7 +341,7 @@ class LLMChatAPI:
      
         except json.JSONDecodeError as e:
             self.logger.log_error(f"Errore nel parsing JSON della risposta: {str(e)}")
-            self.logger.log_error(f"Testo ricevuto: {response_text[:200]}...")
+            self.logger.log_error(f"Testo ricevuto: {response_text}...")
             return False, {
                 "error": "Risposta del modello non valida (JSON non corretto).",
                 "status_code": 500
