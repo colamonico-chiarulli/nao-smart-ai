@@ -40,7 +40,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - Log dei dialoghi per analisi e miglioramento prompt AI
 
 ### 🌐 Architettura Scalabile
-- **Web API Server** sviluppata in Python 3.13
+- **Web REST API Server** sviluppata in Python 3.13
 - Gestione simultanea di più robot NAO
 - Conservazione della cronologia dei dialoghi
 
@@ -63,7 +63,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
    - Controllo movimenti e audio
    - Invio audio
 
-2. **🌐 Web API Server (Cloud)** (Python 3.13)
+2. **🌐 Web REST API Server (Cloud)** (Python 3.13)
    - Riconoscimento audio STT
    - Bridge tra NAO e Modelli AI - LLM 
    - Gestione personalità multiple
@@ -83,7 +83,7 @@ Il sistema supera i limiti delle risposte predefinite, offrendo:
 - Choregraphe Suite per sviluppo
 - Server cloud con Python 3.13+
 
-### 1. Setup Web API
+### 1. Setup Web REST API Server
 ```bash
 # Clone del repository
 git clone https://github.com/colamonico-chiarulli/nao-smart-ai
@@ -96,13 +96,17 @@ pip install -r requirements.txt
 cp .env.example .env
 # Editare .env con le proprie chiavi API e gli altri parametri
 
-# Configurazione libreria movimenti
+# Configurazione libreria movimenti di NAO che si vogliono gestire
 cp movements.example.json movements.json
-# Editare movements.json con i movimenti di NAO che si vogliono gestire
+
 # Configurazione libreria animazioni personalizzate
 # Editare i file json con le azioni e le descrizioni si vogliono gestire con AI
 cp actions.example.json actions.json
 cp action_map.example.json action_map.json
+
+# Configurazione del PROMPT_TECNICO per la generazione di risposte coerenti
+# con il client sviluppato (nella cartella ai_prompts)
+cp example_technical_prompt.py technical_prompt.py
 ```
 
 ### 2. Deploy su Cloud
@@ -181,7 +185,7 @@ Iniziative Didattiche correlate a questo progetto
 
 NAO Smart AI adotta un modello di licensing duale:
 
-#### 🌐 Server Web API (AGPL-3.0)
+#### 🌐 Web REST API Server (AGPL-3.0)
 Il componente server è rilasciato sotto **GNU AGPL-3.0**.
 Questo garantisce che miglioramenti al **core** rimangano 
 aperti e disponibili alla comunità.
@@ -195,7 +199,7 @@ Il componente client per robot NAO è rilasciato sotto
 - Università per fini di ricerca
 - Scuole dotate di NAO con accordi documentati con gli enti sopra elencati per finalità sociali no-profit
 
-### 📜 Licenza per Server Web API (AGPL-3.0) 
+### 📜 Licenza per il Server Web REST API Server (AGPL-3.0) 
 
 Questo progetto è rilasciato sotto **licenza GNU Affero General Public License version 3** - vedi il file [LICENSE](LICENSE) per i dettagli.
 
