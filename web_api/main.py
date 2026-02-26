@@ -45,6 +45,8 @@ For full Additional Terms see the LICENSE file.
 ------------------------------------------------------------------------------
 """
 
+import os
+from functools import wraps
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 # from utils.gemini_chat_api import GeminiChatAPI
@@ -52,6 +54,22 @@ from utils.llm_chat_api import LLMChatAPI
 from utils.stt import STT
 
 
+
+
+def require_admin_token(f):
+    """Decorator che protegge le rotte admin verificando il token nella query string (?token=...)"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        admin_token = os.getenv("ADMIN_TOKEN", "")
+        if not admin_token:
+            return jsonify({"error": "Admin non configurato: ADMIN_TOKEN assente nel file .env", "success": False}), 503
+        token = request.args.get("token", "")
+        if not token:
+            return jsonify({"error": "Token mancante. Aggiungi ?token=<TOKEN> alla URL", "success": False}), 401
+        if token != admin_token:
+            return jsonify({"error": "Token non valido", "success": False}), 403
+        return f(*args, **kwargs)
+    return decorated
 
 
 def create_app():
@@ -88,8 +106,6 @@ def create_app():
                 return chat_api.handle_talk_action(data)
             elif action == "end":
                 return chat_api.handle_end_action(data)
-            elif action == "history":
-                return chat_api.handle_history_action(data)
             else:
                 return jsonify({"error": f"Azione sconosciuta: {action}"}), 400
 
@@ -98,6 +114,7 @@ def create_app():
             return jsonify({"error": str(e), "success": False}), 500
 
     @app.route("/admin", methods=["POST"])
+    @require_admin_token
     def handle_admin():
         """Endpoint per le azioni di amministrazione"""
         data = request.json
@@ -111,6 +128,8 @@ def create_app():
                 return chat_api.handle_admin_list_chats()
             elif action == "delete-chats":
                 return chat_api.handle_admin_delete_chats()
+            elif action == "history":
+                return chat_api.handle_history_action(data)
             else:
                 return jsonify({"error": f"Azione sconosciuta: {action}"}), 400
 
