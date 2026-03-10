@@ -1,0 +1,969 @@
+<!--
+File:	/tests/admin_dashboard.htm
+-----
+Admin Feedback Dashboard - NAO-Smart-AI API
+-----
+@author  Rino Andriano <andriano@colamonicochiarulli.edu.it>
+@copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
+Created Date: Friday, February 27th 2026
+-----
+@license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Additional Terms under Section 7(b):
+
+The following attribution requirements apply to this work:
+
+1. Copyright notices and author attribution in source code files
+   cannot be removed or altered.
+2. Any interactive user interface must preserve and display
+   author attribution (Copyright, authors, project name).
+3. System prompts containing author information cannot be modified
+4. Public demonstrations, publications and derivative works
+   must credit the original authors.
+
+For full Additional Terms see the LICENSE file.
+------------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAO Smart AI – Feedback Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./shared_chat.css">
+    <style>
+        :root {
+            --primary: #6c63ff;
+            --primary2: #a78bfa;
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --bg: #0f0e1a;
+            --surface: #1a1830;
+            --surface2: #221f38;
+            --border: #2e2b4a;
+            --text: #e2e0f0;
+            --muted: #7b789a;
+            --user-msg: linear-gradient(135deg, #6c63ff, #a78bfa);
+            --bot-msg: #231f3d;
+            --success: #34d399;
+            --danger: #f87171;
+            --warn: #fbbf24;
+            --shadow: 0 8px 32px rgba(0, 0, 0, .45);
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: linear-gradient(135deg, #1e1b38 0%, #0f0e1a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            height: 72px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary2), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.off {
+            background: var(--danger);
+            animation: none;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, .4);
+            }
+
+            50% {
+                opacity: .7;
+                box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+            }
+        }
+
+        /* ── CONFIG BAR ── */
+        .config-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .cfg-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .cfg-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .cfg-group input {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .cfg-group input:focus {
+            border-color: var(--primary);
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 0;
+            overflow: hidden;
+            height: calc(100vh - 72px - 62px);
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 18px 20px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .badge {
+            background: var(--primary);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 2px 8px;
+            min-width: 22px;
+            text-align: center;
+        }
+
+        .sidebar-actions {
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(108, 99, 255, .4);
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, .15);
+            color: var(--danger);
+            border: 1px solid rgba(248, 113, 113, .3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, .25);
+        }
+
+        .btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ── CHAT LIST ── */
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all .2s;
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+        }
+
+        .chat-item:hover {
+            background: var(--surface2);
+            border-color: var(--border);
+        }
+
+        .chat-item.active {
+            background: rgba(108, 99, 255, .15);
+            border-color: var(--primary);
+        }
+
+        .chat-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .chat-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-id-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .chat-arrow {
+            color: var(--muted);
+            font-size: 16px;
+            transition: transform .2s;
+        }
+
+        .chat-item.active .chat-arrow {
+            transform: translateX(3px);
+            color: var(--primary2);
+        }
+
+        /* placeholder when list empty */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--muted);
+            gap: 10px;
+        }
+
+        .empty-state .es-icon {
+            font-size: 40px;
+            opacity: .5;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+        }
+
+        /* ── HISTORY PANEL (Manteniamo solo l'involucro generale) ── */
+        .history-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg);
+        }
+
+        .history-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+        }
+
+        .history-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .chat-id-chip {
+            background: rgba(108, 99, 255, .2);
+            border: 1px solid rgba(108, 99, 255, .4);
+            color: var(--primary2);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ── WELCOME / EMPTY HISTORY ── */
+        .history-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            color: var(--muted);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .history-empty .big-icon {
+            font-size: 64px;
+            opacity: .3;
+        }
+
+        .history-empty h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .history-empty p {
+            font-size: 13px;
+            max-width: 340px;
+            line-height: 1.7;
+        }
+
+        /* ── LOADING SPINNER ── */
+        .spinner {
+            display: flex;
+            gap: 7px;
+            padding: 16px;
+            justify-content: center;
+        }
+
+        .sp-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--primary2);
+            animation: bounce 1.3s infinite ease-in-out;
+        }
+
+        .sp-dot:nth-child(1) {
+            animation-delay: -.3s;
+        }
+
+        .sp-dot:nth-child(2) {
+            animation-delay: -.15s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+                opacity: .3;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* ── TOAST ── */
+        #toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+            z-index: 9999;
+            max-width: 360px;
+        }
+
+        #toast.show {
+            opacity: 1;
+        }
+
+        #toast.success {
+            background: rgba(52, 211, 153, .9);
+        }
+
+        #toast.error {
+            background: rgba(248, 113, 113, .9);
+        }
+
+        #toast.warn {
+            background: rgba(251, 191, 36, .9);
+            color: #1a1830;
+        }
+
+        /* ── CONFIRM DIALOG ── */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .65);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-overlay.open {
+            display: flex;
+        }
+
+        .dialog-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: var(--shadow);
+            animation: fadeUp .2s ease-out;
+        }
+
+        .dialog-box h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .dialog-box p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+
+        .dialog-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--muted);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 720px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                height: 260px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ════════════════════════════════ HEADER ════════════════════════════════ -->
+    <header>
+        <div class="logo">🤖</div>
+        <div class="header-title">
+            <h1>NAO Smart AI — Feedback Dashboard</h1>
+            <p>IISS Colamonico Chiarulli · Admin Panel</p>
+        </div>
+        <div class="header-right">
+            <div class="status-pill">
+                <div class="status-dot off" id="statusDot"></div>
+                <span id="statusText">Non connesso</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ════════════════════════════════ CONFIG BAR ════════════════════════════════ -->
+    <div class="config-bar">
+        <div class="cfg-group" style="flex:2; min-width:300px;">
+            <label>API URL</label>
+            <input type="text" id="apiUrl" placeholder="https://esempio.it/api4/" value="https://127.0.0.1:5000/">
+        </div>
+        <div class="cfg-group" style="flex:2; min-width:300px;">
+            <label>Admin Token</label>
+            <input type="password" id="adminToken" placeholder="Incolla il token ADMIN_TOKEN dal file .env">
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════ MAIN ════════════════════════════════ -->
+    <div class="main">
+
+        <!-- ── SIDEBAR ── -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Chat attive</h2>
+                <span class="badge" id="chatCount">0</span>
+            </div>
+
+            <div class="sidebar-actions">
+                <button class="btn btn-primary" id="refreshBtn">⟳ Aggiorna lista</button>
+                <button class="btn btn-danger" id="deleteAllBtn" title="Cancella tutte le chat">🗑️</button>
+            </div>
+
+            <!-- Dropdown select as alternative quick-nav -->
+            <div style="padding:10px 16px; border-bottom:1px solid var(--border);">
+                <select id="chatSelect" style="
+                width:100%; background:var(--surface2);
+                border:1px solid var(--border); border-radius:8px;
+                color:var(--text); font-size:13px; padding:8px 10px;
+                outline:none; font-family:inherit; cursor:pointer;">
+                    <option value="">— Seleziona una chat —</option>
+                </select>
+            </div>
+
+            <div class="chat-list" id="chatList">
+                <div class="empty-state">
+                    <div class="es-icon">💬</div>
+                    <p>Premi <strong>Aggiorna lista</strong> per caricare le chat dal server.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ── HISTORY PANEL ── -->
+        <section class="history-panel" id="historyPanel">
+            <div class="history-header" id="historyHeader" style="display:none;">
+                <h2>📜 Cronologia conversazione</h2>
+                <span class="chat-id-chip" id="historyChip"></span>
+            </div>
+
+            <div class="history-empty" id="historyEmpty">
+                <div class="big-icon">🗂️</div>
+                <h3>Nessuna chat selezionata</h3>
+                <p>Seleziona una chat dalla lista a sinistra per visualizzare la cronologia della conversazione.</p>
+            </div>
+
+            <div class="messages-area" id="messagesArea" style="display:none;"></div>
+        </section>
+    </div>
+
+    <!-- ════════════════════════════════ TOAST ════════════════════════════════ -->
+    <div id="toast"></div>
+
+    <!-- ════════════════════════════════ CONFIRM DIALOG ════════════════════════════════ -->
+    <div class="dialog-overlay" id="confirmDialog">
+        <div class="dialog-box">
+            <h3>⚠️ Conferma eliminazione</h3>
+            <p>Questa azione rimuoverà permanentemente tutte le sessioni di chat dalla memoria del server. L'operazione
+                è irreversibile.</p>
+            <div class="dialog-btns">
+                <button class="btn" id="dlgCancel"
+                    style="background:var(--surface); border:1px solid var(--border); color:var(--muted);">
+                    Annulla
+                </button>
+                <button class="btn btn-danger" id="dlgConfirm">🗑️ Cancella tutto</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./shared_chat.js"></script>
+    <script>
+        /* ── helpers UI ── */
+        const $ = id => document.getElementById(id);
+
+        let activeChatId = null;
+        let chatIds = [];
+
+        /* ── toast ── */
+        let toastTimer;
+        function showToast(msg, type = 'success') {
+            const t = $('toast');
+            t.textContent = msg;
+            t.className = `show ${type}`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.className = '', 3500);
+        }
+
+        /* ── status dot ── */
+        function setStatus(ok, label) {
+            const dot = $('statusDot');
+            const text = $('statusText');
+            dot.className = 'status-dot' + (ok ? '' : ' off');
+            text.textContent = label;
+        }
+
+        /* ── build admin URL ── */
+        function adminUrl() {
+            let base = $('apiUrl').value.trim().replace(/\/$/, '');
+            // strip /chat suffix if present
+            if (base.endsWith('/chat')) base = base.slice(0, -5);
+            const token = $('adminToken').value.trim();
+            return { base: base + '/admin', token };
+        }
+
+        /* ── fetch wrapper ── */
+        async function adminPost(action, chatId = null) {
+            const { base, token } = adminUrl();
+            if (!token) { showToast('Token admin mancante', 'error'); return null; }
+
+            const body = { action };
+            if (chatId) body.chat_id = chatId;
+
+            try {
+                const res = await fetch(`${base}?token=${encodeURIComponent(token)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    showToast(`Errore ${res.status}: ${data.error || res.statusText}`, 'error');
+                    setStatus(false, 'Errore connessione');
+                    return null;
+                }
+                setStatus(true, 'Connesso');
+                return data;
+            } catch (err) {
+                showToast('Impossibile contattare il server: ' + err.message, 'error');
+                setStatus(false, 'Non connesso');
+                return null;
+            }
+        }
+
+        /* ══════════════════ LIST CHATS ══════════════════ */
+        async function loadChatList() {
+            $('refreshBtn').disabled = true;
+            $('refreshBtn').textContent = '⏳ Caricamento…';
+
+            const data = await adminPost('list-chats');
+
+            $('refreshBtn').disabled = false;
+            $('refreshBtn').textContent = '⟳ Aggiorna lista';
+
+            if (!data) return;
+
+            // Normalize: the API returns { full_history: [...] } dove ogni elemento ha un chat_id
+            let ids = [];
+            if (data.full_history) {
+                ids = [...new Set(data.full_history.map(m => m.chat_id))];
+            } else {
+                ids = data.chats || data.chat_ids || data.active_sessions || [];
+            }
+            chatIds = ids;
+
+            $('chatCount').textContent = ids.length;
+            renderChatList(ids);
+            renderSelect(ids);
+
+            if (ids.length === 0) {
+                showToast('Nessuna chat attiva sul server', 'warn');
+            } else {
+                showToast(`${ids.length} chat caricata/e`, 'success');
+            }
+        }
+
+        function renderChatList(ids) {
+            const list = $('chatList');
+            if (ids.length === 0) {
+                list.innerHTML = `<div class="empty-state">
+                <div class="es-icon">💬</div>
+                <p>Nessuna chat attiva al momento.</p>
+            </div>`;
+                return;
+            }
+
+            list.innerHTML = ids.map((id, i) => `
+            <div class="chat-item${id === activeChatId ? ' active' : ''}"
+                 data-id="${escHtml(id)}"
+                 onclick="selectChat('${escHtml(id)}')">
+                <div class="chat-avatar">💬</div>
+                <div class="chat-info">
+                    <div class="chat-id-text" title="${escHtml(id)}">${escHtml(id)}</div>
+                    <div class="chat-sub">Chat #${i + 1}</div>
+                </div>
+                <div class="chat-arrow">›</div>
+            </div>
+        `).join('');
+        }
+
+        function renderSelect(ids) {
+            const sel = $('chatSelect');
+            sel.innerHTML = '<option value="">— Seleziona una chat —</option>' +
+                ids.map((id, i) => `<option value="${escHtml(id)}">${i + 1}. ${escHtml(id)}</option>`).join('');
+            sel.value = activeChatId || '';
+        }
+
+        /* ══════════════════ SELECT CHAT ══════════════════ */
+        async function selectChat(id) {
+            if (!id) return;
+            activeChatId = id;
+
+            // highlight in list
+            document.querySelectorAll('.chat-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.id === id);
+            });
+            $('chatSelect').value = id;
+
+            // show header
+            $('historyHeader').style.display = 'flex';
+            $('historyChip').textContent = id;
+            $('historyEmpty').style.display = 'none';
+            $('messagesArea').style.display = 'flex';
+
+            // show spinner
+            $('messagesArea').innerHTML = `<div class="spinner">
+            <div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div>
+        </div>`;
+
+            const data = await adminPost('history', id);
+
+            if (!data) {
+                $('messagesArea').innerHTML = `<div class="history-empty">
+                <div class="big-icon">❌</div>
+                <h3>Errore caricamento</h3>
+                <p>Impossibile recuperare la cronologia per questa chat.</p>
+            </div>`;
+                return;
+            }
+
+            renderHistory(data);
+        }
+
+        /* ══════════════════ RENDER HISTORY ══════════════════ */
+        function renderHistory(data) {
+            const area = $('messagesArea');
+
+            // Normalize history array
+            const history = data.history || data.messages || data.conversation || [];
+
+            if (!history || history.length === 0) {
+                area.innerHTML = `<div class="history-empty">
+                <div class="big-icon">📭</div>
+                <h3>Cronologia vuota</h3>
+                <p>Questa chat non contiene ancora messaggi.</p>
+            </div>`;
+                return;
+            }
+
+            area.innerHTML = history.map(entry => SharedChatLogic.renderHistoryEntry(entry)).join('');
+            area.scrollTop = area.scrollHeight;
+        }
+
+        /* ══════════════════ DELETE ALL ══════════════════ */
+        async function deleteAllChats() {
+            $('confirmDialog').classList.remove('open');
+            const data = await adminPost('delete-chats');
+            if (data) {
+                showToast('Tutte le chat sono state cancellate', 'success');
+                chatIds = [];
+                activeChatId = null;
+                $('chatCount').textContent = '0';
+                renderChatList([]);
+                renderSelect([]);
+                resetHistory();
+            }
+        }
+
+        function resetHistory() {
+            $('historyHeader').style.display = 'none';
+            $('historyEmpty').style.display = 'flex';
+            $('messagesArea').style.display = 'none';
+            $('messagesArea').innerHTML = '';
+        }
+
+        /* ══════════════════ UTILS ══════════════════ */
+        function escHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        /* ══════════════════ EVENTS ══════════════════ */
+        $('refreshBtn').addEventListener('click', loadChatList);
+
+        $('deleteAllBtn').addEventListener('click', () => {
+            $('confirmDialog').classList.add('open');
+        });
+
+        $('dlgCancel').addEventListener('click', () => {
+            $('confirmDialog').classList.remove('open');
+        });
+
+        $('dlgConfirm').addEventListener('click', deleteAllChats);
+
+        $('chatSelect').addEventListener('change', e => {
+            const id = e.target.value;
+            if (id) selectChat(id);
+        });
+
+        // Close dialog on backdrop click
+        $('confirmDialog').addEventListener('click', e => {
+            if (e.target === $('confirmDialog')) $('confirmDialog').classList.remove('open');
+        });
+    </script>
+</body>
+
+</html>

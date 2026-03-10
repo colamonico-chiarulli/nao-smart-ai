@@ -40,7 +40,7 @@ class ChatTester:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         dotenv_path = os.path.join(current_dir, "..", "web_api", ".env")
         load_dotenv(dotenv_path)
-        self.API_URL = os.getenv("WEB_API_URL")
+        self.API_URL = os.getenv("WEB_API_URL") + "/chat"
         self.chat_id = None
 
     def send_message(self, message):

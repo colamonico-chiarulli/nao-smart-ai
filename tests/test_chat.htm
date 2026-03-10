@@ -42,10 +42,12 @@ For full Additional Terms see the LICENSE file.
 -->
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NAO Smart AI - Chat Interface</title>
+    <link rel="stylesheet" href="./shared_chat.css">
     <style>
         * {
             margin: 0;
@@ -127,8 +129,15 @@ For full Additional Terms see the LICENSE file.
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         .config-panel {
@@ -157,123 +166,7 @@ For full Additional Terms see the LICENSE file.
             font-size: 14px;
         }
 
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f1f5f9;
-        }
 
-        .message {
-            margin-bottom: 20px;
-            display: flex;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            justify-content: flex-end;
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-
-        .action-content {
-            background: #fff7ed !important;
-            color: #c2410c !important;
-            border: 2px solid #fdba74;
-            border-bottom-left-radius: 4px;
-            font-family: 'Courier New', monospace;
-            box-shadow: 0 4px 12px rgba(251, 146, 60, 0.2);
-            position: relative;
-        }
-
-        .action-badge-icon {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #c2410c;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.bot .message-content {
-            background: white;
-            color: #1e293b;
-            border-bottom-left-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .message-timestamp {
-            font-size: 11px;
-            color: #94a3b8;
-            margin-top: 5px;
-            text-align: right;
-        }
-
-        .movements-tag {
-            display: inline-block;
-            background: #e0e7ff;
-            color: #4338ca;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            margin: 4px 4px 0 0;
-            font-weight: 500;
-        }
-
-        .movements-container {
-            margin-top: 8px;
-        }
-
-        .loading {
-            display: flex;
-            gap: 6px;
-            padding: 12px 16px;
-        }
-
-        .loading-dot {
-            width: 8px;
-            height: 8px;
-            background: #94a3b8;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out;
-        }
-
-        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
 
         .input-container {
             padding: 20px;
@@ -375,6 +268,7 @@ For full Additional Terms see the LICENSE file.
         }
     </style>
 </head>
+
 <body>
     <div class="chat-container">
         <div class="chat-header">
@@ -392,7 +286,8 @@ For full Additional Terms see the LICENSE file.
         <div class="config-panel">
             <div class="config-input">
                 <label>API URL:</label>
-                <input type="text" id="apiUrl" placeholder="http://127.0.0.1:5000/chat" value="http://127.0.0.1:5000/chat">
+                <input type="text" id="apiUrl" placeholder="http://127.0.0.1:5000/chat"
+                    value="http://127.0.0.1:5000/chat">
             </div>
         </div>
 
@@ -404,12 +299,7 @@ For full Additional Terms see the LICENSE file.
 
         <div class="input-container">
             <div class="input-wrapper">
-                <input
-                    type="text"
-                    id="messageInput"
-                    placeholder="Scrivi un messaggio a NAO..."
-                    autocomplete="off"
-                >
+                <input type="text" id="messageInput" placeholder="Scrivi un messaggio a NAO..." autocomplete="off">
                 <button class="btn btn-send" id="sendBtn">
                     <span>📤</span> Invia
                 </button>
@@ -420,6 +310,7 @@ For full Additional Terms see the LICENSE file.
         </div>
     </div>
 
+    <script src="./shared_chat.js"></script>
     <script>
         let chatId = null;
         const messagesContainer = document.getElementById('messagesContainer');
@@ -432,138 +323,7 @@ For full Additional Terms see the LICENSE file.
         const chatIdDisplay = document.getElementById('chatIdDisplay');
         const chatIdValue = document.getElementById('chatIdValue');
 
-        // Mappa delle emoticon AGGIORNATA basata sui movimenti reali disponibili
-        const movementEmojis = {
-            // BodyTalk
-            'BodyTalk/Speaking': '💬',
-            'BodyTalk/Thinking/Remember': '💭',
-            
-            // Emotions/Negative
-            'Emotions/Negative/Angry': '😠',
-            'Emotions/Negative/Anxious': '😰',
-            'Emotions/Negative/Bored': '😑',
-            'Emotions/Negative/Disappointed': '😞',
-            'Emotions/Negative/Exhausted': '😫',
-            'Emotions/Negative/Fear': '😨',
-            'Emotions/Negative/Fearful': '😱',
-            'Emotions/Negative/Frustrated': '😤',
-            'Emotions/Negative/Humiliated': '😳',
-            'Emotions/Negative/Hurt': '😢',
-            'Emotions/Negative/Late': '⏰',
-            'Emotions/Negative/Sad': '😢',
-            'Emotions/Negative/Shocked': '😲',
-            'Emotions/Negative/Sorry': '🙏',
-            'Emotions/Negative/Surprise': '😮',
-            
-            // Emotions/Neutral
-            'Emotions/Neutral/Alienated': '🤷',
-            'Emotions/Neutral/Annoyed': '😒',
-            'Emotions/Neutral/AskForAttention': '👋',
-            'Emotions/Neutral/Cautious': '🤨',
-            'Emotions/Neutral/Confused': '😕',
-            'Emotions/Neutral/Determined': '😤',
-            'Emotions/Neutral/Embarrassed': '😅',
-            'Emotions/Neutral/Hello': '👋',
-            'Emotions/Neutral/Hesitation': '😬',
-            'Emotions/Neutral/Innocent': '😇',
-            'Emotions/Neutral/Lonely': '😔',
-            'Emotions/Neutral/Mischievous': '😏',
-            'Emotions/Neutral/Puzzled': '🤔',
-            'Emotions/Neutral/Sneeze': '🤧',
-            'Emotions/Neutral/Stubborn': '😠',
-            'Emotions/Neutral/Suspicious': '🤨',
-            
-            // Emotions/Positive
-            'Emotions/Positive/Amused': '😄',
-            'Emotions/Positive/Confident': '😎',
-            'Emotions/Positive/Ecstatic': '🤩',
-            'Emotions/Positive/Enthusiastic': '🤗',
-            'Emotions/Positive/Excited': '😃',
-            'Emotions/Positive/Happy': '😊',
-            'Emotions/Positive/Hungry': '🍕',
-            'Emotions/Positive/Hysterical': '😂',
-            'Emotions/Positive/Interested': '🧐',
-            'Emotions/Positive/Laugh': '😄',
-            'Emotions/Positive/Mocker': '😏',
-            'Emotions/Positive/Optimistic': '😊',
-            'Emotions/Positive/Peaceful': '😌',
-            'Emotions/Positive/Proud': '😌',
-            'Emotions/Positive/Relieved': '😅',
-            'Emotions/Positive/Shy': '😊',
-            'Emotions/Positive/Sure': '👍',
-            'Emotions/Positive/Winner': '🏆',
-            
-            // Gestures
-            'Gestures/Applause': '👏',
-            'Gestures/BowShort': '🙇',
-            'Gestures/But': '☝️',
-            'Gestures/CalmDown': '🤚',
-            'Gestures/Caress': '🤗',
-            'Gestures/CatchFly': '🦟',
-            'Gestures/Choice': '🤷',
-            'Gestures/Claw': '✊',
-            'Gestures/Coaxing': '🤝',
-            'Gestures/ComeOn': '👍',
-            'Gestures/CountFive': '5️⃣',
-            'Gestures/CountFour': '4️⃣',
-            'Gestures/CountMore': '🔢',
-            'Gestures/CountOne': '1️⃣',
-            'Gestures/CountThree': '3️⃣',
-            'Gestures/CountTwo': '2️⃣',
-            'Gestures/Desperate': '😩',
-            'Gestures/Enthusiastic': '🙌',
-            'Gestures/Everything': '🌍',
-            'Gestures/Explain': '👨‍🏫',
-            'Gestures/Far': '👉',
-            'Gestures/Follow': '🚶',
-            'Gestures/Freeze': '🧊',
-            'Gestures/Give': '🎁',
-            'Gestures/Great': '👍',
-            'Gestures/HeSays': '💬',
-            'Gestures/Hey': '👋',
-            'Gestures/Hide': '🙈',
-            'Gestures/Hungry': '🍕',
-            'Gestures/IDontKnow': '🤷',
-            'Gestures/JointHands': '🙏',
-            'Gestures/Joy': '😄',
-            'Gestures/Kisses': '😘',
-            'Gestures/Look': '👀',
-            'Gestures/Maybe': '🤔',
-            'Gestures/Me': '👤',
-            'Gestures/Mime': '🎭',
-            'Gestures/Next': '➡️',
-            'Gestures/No': '❌',
-            'Gestures/Nothing': '🚫',
-            'Gestures/OnTheEvening': '🌙',
-            'Gestures/Please': '🙏',
-            'Gestures/Reject': '🙅',
-            'Gestures/Salute': '👋',
-            'Gestures/Shoot': '🎯',
-            'Gestures/ShowFloor': '⬇️',
-            'Gestures/ShowSky': '⬆️',
-            'Gestures/Shy': '😊',
-            'Gestures/Stretch': '🤸',
-            'Gestures/Surprised': '😮',
-            'Gestures/Take': '🤲',
-            'Gestures/Thinking': '🤔',
-            'Gestures/This': '👈',
-            'Gestures/WhatSThis': '❓',
-            'Gestures/Wings': '🦅',
-            'Gestures/Yes': '✅',
-            'Gestures/You': '👉',
-            'Gestures/YouKnowWhat': '💡',
-            'Gestures/Yum': '😋'
-        };
 
-        function getEmojiForMovement(movement) {
-            // Cerca corrispondenza esatta o parziale
-            for (const [key, emoji] of Object.entries(movementEmojis)) {
-                if (movement.includes(key)) {
-                    return emoji;
-                }
-            }
-            return '🤖';
-        }
 
         function updateStatus(connected) {
             if (connected) {
@@ -584,83 +344,20 @@ For full Additional Terms see the LICENSE file.
         }
 
         function addMessage(text, isUser, movements = null) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
-
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = text;
-
-            if (movements && movements.length > 0) {
-                const movementsDiv = document.createElement('div');
-                movementsDiv.className = 'movements-container';
-                movements.forEach(mov => {
-                    const tag = document.createElement('span');
-                    tag.className = 'movements-tag';
-                    const emoji = getEmojiForMovement(mov);
-                    const cleanName = mov.replace('animations/Stand/', '');
-                    tag.textContent = `${emoji} ${cleanName}`;
-                    movementsDiv.appendChild(tag);
-                });
-                contentDiv.appendChild(movementsDiv);
-            }
-
-            const timestamp = document.createElement('div');
-            timestamp.className = 'message-timestamp';
-            timestamp.textContent = new Date().toLocaleTimeString('it-IT', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            contentDiv.appendChild(timestamp);
-
-            messageDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(messageDiv);
+            const dom = SharedChatLogic.createMessageDOM(text, isUser, movements);
+            messagesContainer.appendChild(dom);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         function addActionMessage(actionText) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message bot';
-
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content action-content';
-
-            const badge = document.createElement('div');
-            badge.className = 'action-badge-icon';
-            badge.textContent = '🎬';
-            contentDiv.appendChild(badge);
-
-            contentDiv.innerHTML += `<strong>AZIONE RILEVATA:</strong><br>${actionText}`;
-
-            const timestamp = document.createElement('div');
-            timestamp.className = 'message-timestamp';
-            timestamp.textContent = new Date().toLocaleTimeString('it-IT', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            contentDiv.appendChild(timestamp);
-
-            messageDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(messageDiv);
+            const dom = SharedChatLogic.createActionDOM(actionText);
+            messagesContainer.appendChild(dom);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         function addLoadingIndicator() {
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message bot';
-            loadingDiv.id = 'loadingIndicator';
-
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content loading';
-
-            for (let i = 0; i < 3; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'loading-dot';
-                contentDiv.appendChild(dot);
-            }
-
-            loadingDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(loadingDiv);
+            const dom = SharedChatLogic.createLoadingDOM();
+            messagesContainer.appendChild(dom);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
@@ -794,4 +491,5 @@ For full Additional Terms see the LICENSE file.
         addMessage('Ciao! Sono NAO, il robot sociale della scuola Colamonico Chiarulli. Come posso aiutarti oggi?', false);
     </script>
 </body>
+
 </html>
