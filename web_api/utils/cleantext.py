@@ -96,6 +96,80 @@ def clean_markdown(text):
     cleaned = cleaned.strip()  # Rimuove eventuali spazi rimasti
     return cleaned
 
+import json
+
+def extract_and_parse_llm_json(response_text):
+    """
+    Estrae il primo blocco JSON valido dalla risposta di un LLM.
+    
+    1. Cerca i blocchi racchiusi tra ```json e ``` o anche solo parentesi graffe.
+    2. Pulisce eventuali stringhe contenenti commenti (// o /* */) inseriti erroneamente dall'LLM.
+    3. Tenta di fare il parsing JSON e, appena trova un blocco con la chiave "chunks", lo restituisce scartando il resto.
+    4. Se nessun blocco JSON è valido, restituisce un JSON strutturato di fallback (System Confused).
+    
+    Args:
+        response_text (str): La risposta testuale generata dall'LLM, che può contenere Markdown extra, commenti, o multipli JSON.
+        
+    Returns:
+        dict: Il primo oggetto JSON che rispetta la struttura di base, oppure un JSON di "Confusione" e "NO_ACTION".
+    """
+    # 1. Trova i blocchi JSON racchiusi da codifica Markdown
+    blocks = re.findall(r'```(?:json)?\s*(.*?)\s*```', response_text, re.DOTALL)
+    
+    if not blocks:
+        # Fallback: cerca strutture racchiuse in parentesi graffe
+        # Questo estratto cerca strutture JSON semplici catturando tutto dalla prima { all'ultima } e cercando di fare il parse
+        # Poiché il JSON può avere parentesi annidate, una regex greedily '\{.*\}' su tutta la stringa è l'approccio migliore
+        # per catturare un oggetto JSON singolo o multipli se estraiamo i vari chunk
+        match = re.search(r'(\{.*\})', response_text, re.DOTALL)
+        if match:
+            # Prova la stringa intera con graffe
+            blocks = [match.group(1)]
+            
+            # Altrimenti prova espressioni meno avide se si sospettano multipli JSON non in blocchi markdown separati
+            # ma questo lo lasceremo a future iterazioni, di default l'LLM isola bene in markdown
+        else:
+            # Se ancora vuoto, tenta di testare l'intera stringa come potenziale blocco JSON malformato
+            blocks = [response_text]
+            
+    # Variabile per immagazzinare il primo JSON semanticamente valido
+    first_valid_json = None
+    
+    for block in blocks:
+        try:
+            # Rimuove in sicurezza commenti C-style (// o /* */)
+            # Usiamo un lookbehind per evitare di tagliare "http://"
+            block_cleaned = re.sub(r'(?<![:"a-zA-Z])//.*?\n|/\*.*?\*/', '\n', block + '\n', flags=re.DOTALL)
+            
+            # Rimuove le virgole finali extra (trailing commas) prima di parentesi quadre o graffe di chiusura
+            block_cleaned = re.sub(r',\s*([}\]])', r'\1', block_cleaned)
+            
+            obj = json.loads(block_cleaned)
+            
+            # Controlla la struttura coerente minima
+            if isinstance(obj, dict) and "chunks" in obj:
+                first_valid_json = obj
+                break # Fermati al primo JSON valido trovato, scartando il resto
+                
+        except json.JSONDecodeError:
+            # Ignora i blocchi che non sono formattabili in JSON
+            continue
+            
+    if first_valid_json:
+        return first_valid_json
+    
+    # Ritorna JSON di Fallback in caso di mancanza di risposte JSON esatte
+    fallback_response = {
+        "action": "NO_ACTION",
+        "chunks": [
+            {
+                "text": "Adesso non posso rispondere: sono confuso!",
+                "movements": ["animations/Stand/Emotions/Neutral/Confused_1"]
+            }
+        ]
+    }
+    return fallback_response
+
 # test di utilizzo
 if __name__ == "__main__":
     test_text = """
@@ -118,9 +192,47 @@ if __name__ == "__main__":
     print(cleaned)
     print("\n-----")
     
-    json = clean_markdown(test_markdown)
+    json_str = clean_markdown(test_markdown)
     print("JSON originale:")
     print(test_markdown)
     print("\nJSON pulito:")
-    print(json)
+    print(json_str)
+    print("\n-----")
+
+    print("\nTest extract_and_parse_llm_json:")
     
+    # Caso 1: Multipli JSON con commenti e markdown
+    test_case_1 = '''
+    ```json
+    {
+      "action": "NO_ACTION",
+      "chunks": [{"text": "Ignorami", "movements": []}]
+    }
+    ```
+    Testo extra intermedio
+    ```json
+    {
+      "action": "ACT_TEST",
+      "chunks": [{"text": "Prendi me!", "movements": []}], // commento
+    }
+    ```
+    '''
+    res1 = extract_and_parse_llm_json(test_case_1)
+    print(f"Caso 1 (Multipli JSON con commento): Azione estratta -> {res1.get('action')}")
+    
+    # Caso 2: Totalmente malformato (Fallback)
+    test_case_2 = '''Questo è solo testo e non c'è nessun JSON.'''
+    res2 = extract_and_parse_llm_json(test_case_2)
+    print(f"Caso 2 (Fallback testo no JSON): Azione estratta -> {res2.get('action')}, Messaggio -> {res2.get('chunks')[0].get('text')}")
+    
+    # Caso 3: Parentesi graffe libere senza markdown
+    test_case_3 = '''
+    Ecco il JSON:
+    {
+      "action": "ACT_DANCE",
+      "chunks": [{"text": "Ballo!", "movements": []}]
+    }
+    Finito.
+    '''
+    res3 = extract_and_parse_llm_json(test_case_3)
+    print(f"Caso 3 (Graffe libere): Azione estratta -> {res3.get('action')}")
