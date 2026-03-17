@@ -10,7 +10,7 @@ Le diverse azioni sono specificate nel campo action del JSON inviato.
 @copyright (C) 2024-2026 Rino Andriano, Vito Trifone Gargano
 Created Date: Wednesday, November 20th 2024, 6:37:29 pm
 -----
-Last Modified: 	February 21st 2026, 11:54:00 am
+Last Modified: 	March 17th 2026 10:42:46 am
 Modified By: 	Rino Andriano <andriano@colamonicochiarulli.edu.it>
 -----
 @license	https://www.gnu.org/licenses/agpl-3.0.html AGPL 3.0
@@ -302,10 +302,9 @@ class LLMChatAPI:
             Tuple (success, result) dove result è il dizionario con i chunks o il messaggio di errore
         """
         try:
-            # Rimuove eventuali blocchi di codice Markdown dal JSON generato da LLM
-            cleaned_json_string = clean_markdown(response_text)
-            # Esegui il parsing del JSON sulla stringa pulita
-            response_data = json.loads(cleaned_json_string)
+            from utils.cleantext import extract_and_parse_llm_json
+            # Estrae e parsa il primo JSON valido dalla risposta, oppure ottiene il fallback
+            response_data = extract_and_parse_llm_json(response_text)
             
             chunks = response_data.get("chunks", [])
             
@@ -339,13 +338,6 @@ class LLMChatAPI:
 
             return True, result
      
-        except json.JSONDecodeError as e:
-            self.logger.log_error(f"Errore nel parsing JSON della risposta: {str(e)}")
-            self.logger.log_error(f"Testo ricevuto: {response_text}...")
-            return False, {
-                "error": "Risposta del modello non valida (JSON non corretto).",
-                "status_code": 500
-            }
         except Exception as e:
             self.logger.log_error(f"Errore nel processamento della risposta: {str(e)}")
             return False, {
