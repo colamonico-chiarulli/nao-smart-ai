@@ -47,7 +47,7 @@ Il componente client per robot NAO è rilasciato sotto
 # Changelog NAO Smart AI - Server Web API 
 Tutte le modifiche a questo componente saranno documentate in questo file.
 
-## [1.3] - 2025-03-17
+## [1.3] - 2026-03-17
 
 ### Miglioramenti
 - **JSON Parser/Validator**: Aggiunto un parser/validator JSON per gestire risposte non valide dal modello LLM. Ora il sistema è in grado di estrarre il JSON valido anche se presente in un testo non formattato, evitando crash e migliorando la robustezza del sistema.
@@ -60,7 +60,7 @@ Tutte le modifiche a questo componente saranno documentate in questo file.
 ### Sicurezza
 - **admin token**: Aggiunto token di amministrazione per la rotta `/admin`.
 
-## [1.2] - 2025-02-25
+## [1.2] - 2026-02-25
 
 ### Aggiunta nuova rotta `/chat/voice`
 ** Endpoint combinato: STT + Chat LLM** in una singola chiamata.
