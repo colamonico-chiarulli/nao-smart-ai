@@ -98,7 +98,7 @@ def clean_markdown(text):
 
 import json
 
-def extract_and_parse_llm_json(response_text):
+def extract_and_parse_llm_json(response_text, chat_logger=None):
     """
     Estrae il primo blocco JSON valido dalla risposta di un LLM.
     
@@ -151,13 +151,19 @@ def extract_and_parse_llm_json(response_text):
                 first_valid_json = obj
                 break # Fermati al primo JSON valido trovato, scartando il resto
                 
-        except json.JSONDecodeError:
-            # Ignora i blocchi che non sono formattabili in JSON
+        except json.JSONDecodeError as e:
+            # Logga il blocco malformato se il logger è disponibile
+            if chat_logger:
+                chat_logger.log_warning(f"JSON parse error: {e} | Blocco: {block[:200]}")
             continue
             
     if first_valid_json:
         return first_valid_json
     
+    # Logga la risposta originale dell'LLM quando nessun JSON valido è stato trovato
+    if chat_logger:
+        chat_logger.log_error(f"JSON fallback attivato! Risposta originale LLM: {response_text[:2000]}")
+
     # Ritorna JSON di Fallback in caso di mancanza di risposte JSON esatte
     fallback_response = {
         "action": "NO_ACTION",

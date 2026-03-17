@@ -304,7 +304,7 @@ class LLMChatAPI:
         try:
             from utils.cleantext import extract_and_parse_llm_json
             # Estrae e parsa il primo JSON valido dalla risposta, oppure ottiene il fallback
-            response_data = extract_and_parse_llm_json(response_text)
+            response_data = extract_and_parse_llm_json(response_text, self.logger)
             
             chunks = response_data.get("chunks", [])
             
