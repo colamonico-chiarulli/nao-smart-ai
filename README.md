@@ -176,7 +176,9 @@ Iniziative Didattiche correlate a questo progetto
 ---
 > ## 🏆 Riconoscimenti e Premi
 
- - il 14 novembre 2025 - **NAO Smart AI** è stato premiato, classificandosi al **primo posto** del concorso nazionale [**Premio Imprendi - Innovation Champions 2025**](https://www.imprendi.org/premi/#premio-imprendi-innovazione) della Fondazione Imprendi di Padova
+ - 14 novembre 2025 - **NAO Smart AI** è stato premiato, classificandosi al **primo posto** del concorso nazionale [**Premio Imprendi - Innovation Champions 2025**](https://www.imprendifoundation.org/primo-premio-imprendi-innovazione-2025/) della Fondazione Imprendi di Padova
+ - 26 giugno 2026 - Accordo di collaborazione con l'**Università Cattolica del Sacro Cuore - Centro di Ricerca sulla Teoria della Mente e le Competenze Sociali nel Ciclo di Vita (CERITOM)** - per la ricerca e lo studio di "*Laboratori didattici sull'impiego dell'intelligenza artificiale generativa nella Robotica sociale*" (fino al 1 luglio 2027)
+
 ---
 
 ## 📜 Licenze 
